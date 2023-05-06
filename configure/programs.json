@@ -1,0 +1,7 @@
+[
+    {
+        "name": "pyth_mock",
+        "program": "programs/pyth_mock.so",
+        "kp": "programs/pyth_mock.json"
+    }
+]
