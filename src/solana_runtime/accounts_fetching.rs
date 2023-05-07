@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use async_trait::async_trait;
 use const_env::from_env;
@@ -31,7 +31,11 @@ impl TestingTask for AccountsFetchingTests {
         }
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
 
-        let known_accounts = config.known_accounts.clone();
+        let known_accounts = config
+            .known_accounts
+            .iter()
+            .map(|x| Pubkey::from_str(x.as_str()).unwrap())
+            .collect::<Vec<_>>();
         let unknown_accounts: Vec<Pubkey> =
             AccountsFetchingTests::create_random_address(known_accounts.len());
         let number_of_fetched_accounts =

@@ -1,9 +1,17 @@
 use serde::{Deserialize, Serialize};
-use solana_sdk::{pubkey::Pubkey, signature::Keypair};
+use solana_sdk::{signature::Keypair};
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ProgramData {
+    pub name: String,
+    pub program_path: String,
+    pub program_key: Vec<u8>,
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
-    pub known_accounts: Vec<Pubkey>,
+    pub programs: Vec<ProgramData>,
+    pub known_accounts: Vec<String>,
     pub payers: Vec<Vec<u8>>,
 }
 

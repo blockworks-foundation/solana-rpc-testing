@@ -13,7 +13,7 @@ import { OutputFile } from './output_file';
 
 const numberOfAccountsToBeCreated = option({
     type: number,
-    defaultValue: () => 1024,
+    defaultValue: () => 256,
     long: 'number-of-accounts',
   });
 
@@ -50,7 +50,7 @@ const balancePerPayer = option({
 
 const outFile = option({
     type: string,
-    defaultValue: () => "out.json",
+    defaultValue: () => "config.json",
     long: 'output-file',
     short: 'o'
   });
@@ -115,15 +115,19 @@ async function configure(
     }
     
     const programsData = programs.map( x => {
-        let programid = getKeypairFromFile(x.kp);
+        //let programid = getKeypairFromFile(x.kp);
+        let programId = Keypair.generate();
         return {
             name : x.name,
             programPath : x.program,
-            keypair: programid, 
+            programKey : programId.secretKey, 
         }
     });
 
-    let programIds = programsData.map(x => x.keypair.publicKey);
+    let programIds = programsData.map(x => {
+      let kp = Keypair.fromSecretKey(x.programKey)
+      return kp.publicKey
+    });
 
     console.log("starting program deployment");
     await deploy_programs(connection, authority, programsData);

@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import { ProgramData } from "./deploy_programs";
 
 export interface OutputFile {
-    payers: Uint8Array[],
+    payers: number[][],
     programs: ProgramData[],
     known_accounts: PublicKey[],
 }

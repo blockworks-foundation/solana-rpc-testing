@@ -5,7 +5,7 @@ use clap::{command, Parser};
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    #[arg(short = 'c', long, default_value_t = String::from("config.json"))]
+    #[arg(short = 'c', long, default_value_t = String::from("configure/config.json"))]
     pub config_file: String,
 
     #[arg(long)]
@@ -17,7 +17,7 @@ pub struct Args {
     #[arg(short = 'a', long)]
     pub test_all: bool,
 
-    #[arg(short = 'r', long, default_value_t = String::from("http://127.0.0.1:8890"))]
+    #[arg(short = 'r', long, default_value_t = String::from("http://127.0.0.1:8899"))]
     pub rpc_addr: String,
 
     #[arg(short = 'd', long, default_value_t = 60)]
