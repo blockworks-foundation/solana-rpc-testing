@@ -1,6 +1,15 @@
 import { command, number, option, string, run } from 'cmd-ts';
 
 import * as accounts from "./general/accounts"
+import * as fs from 'fs';
+
+import programs from './programs.json';
+import { Commitment, Connection, Keypair, LAMPORTS_PER_SOL, SystemInstruction, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { getKeypairFromFile } from './common_utils';
+import { deploy_programs } from './deploy_programs';
+import { createPayer } from './general/create_payers';
+import { configure_accounts } from './general/accounts';
+import { OutputFile } from './output_file';
 
 const numberOfAccountsToBeCreated = option({
     type: number,
@@ -21,13 +30,6 @@ const authority = option({
     defaultValue: () => "~/.config/solana/id.json",
     long: 'authority',
     short: 'a'
-  });
-
-const programs = option({
-    type: string,
-    defaultValue: () => "programs.json",
-    long: 'programs',
-    description: "Programs to be loaded in cluster",
   });
 
 const nbPayers = option({
@@ -60,7 +62,6 @@ const app = command(
             endpoint,
             numberOfAccountsToBeCreated,
             authority,
-            programs,
             nbPayers,
             balancePerPayer,
             outFile,
@@ -69,7 +70,6 @@ const app = command(
             endpoint,
             numberOfAccountsToBeCreated,
             authority,
-            programs,
             nbPayers,
             balancePerPayer,
             outFile,
@@ -79,7 +79,6 @@ const app = command(
                 endpoint,
                 numberOfAccountsToBeCreated,
                 authority,
-                programs,
                 nbPayers,
                 balancePerPayer,
                 outFile,
@@ -96,11 +95,56 @@ run(app, process.argv.slice(2))
 async function configure(
     endpoint: String,
     numberOfAccountsToBeCreated: number,
-    authority: String,
-    programs: String,
+    authorityFile: String,
     nbPayers: number,
     balancePerPayer: number,
     outFile: String,
 ) {
+    // create connections
+    const connection = new Connection(
+      endpoint.toString(),
+      'confirmed' as Commitment,
+    );
 
+    // configure authority
+    const authority = getKeypairFromFile(authorityFile);
+    const authorityBalance = await connection.getBalance(authority.publicKey);
+    const requiredBalance = nbPayers * (balancePerPayer * LAMPORTS_PER_SOL) + 100 * LAMPORTS_PER_SOL;
+    if (authorityBalance < requiredBalance ) {
+      console.log("authority may have low balance balance " + authorityBalance + " required balance " + requiredBalance );
+    }
+    
+    const programsData = programs.map( x => {
+        let programid = getKeypairFromFile(x.kp);
+        return {
+            name : x.name,
+            programPath : x.program,
+            keypair: programid, 
+        }
+    });
+
+    let programIds = programsData.map(x => x.keypair.publicKey);
+
+    console.log("starting program deployment");
+    await deploy_programs(connection, authority, programsData);
+    console.log("programs deployed");
+
+    console.log("Creating payers");
+    let payers = await Promise.all(Array.from(Array(nbPayers).keys()).map(x => {
+      return createPayer(connection, authority, balancePerPayer)
+    }));
+    console.log("Payers created");
+
+    console.log("Creating accounts")
+    let accounts = await configure_accounts(connection, authority, numberOfAccountsToBeCreated, programIds);
+    console.log("Accounts created")
+
+    let outputFile: OutputFile = {
+      programs: programsData,
+      known_accounts: accounts,
+      payers: payers.map(x => x.secretKey),
+    }
+
+    console.log("creating output file")
+    fs.writeFileSync(outFile.toString(), JSON.stringify(outputFile));
 }
