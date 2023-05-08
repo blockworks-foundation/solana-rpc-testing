@@ -1,0 +1,13 @@
+{
+  "name": "solana-rpc-testing",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/blockworks-foundation/solana-rpc-testing.git",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.1.0"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.75.0"
+  }
+}

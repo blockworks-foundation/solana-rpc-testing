@@ -1,10 +1,9 @@
 import { command, number, option, string, run } from 'cmd-ts';
 
-import * as accounts from "./general/accounts"
 import * as fs from 'fs';
 
 import programs from './programs.json';
-import { Commitment, Connection, Keypair, LAMPORTS_PER_SOL, SystemInstruction, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { Commitment, Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { getKeypairFromFile } from './common_utils';
 import { deploy_programs } from './deploy_programs';
 import { createPayer } from './general/create_payers';
@@ -15,7 +14,7 @@ const numberOfAccountsToBeCreated = option({
     type: number,
     defaultValue: () => 1024,
     long: 'number-of-accounts',
-  });
+});
 
 const endpoint = option({
     type: string,
@@ -23,14 +22,14 @@ const endpoint = option({
     long: 'url',
     short: 'u',
     description: "RPC url",
-  });
+});
 
 const authority = option({
     type: string,
     defaultValue: () => "~/.config/solana/id.json",
     long: 'authority',
     short: 'a'
-  });
+});
 
 const nbPayers = option({
     type: number,
@@ -38,7 +37,7 @@ const nbPayers = option({
     long: 'number-of-payers',
     short: 'p',
     description: "Number of payers used for testing"
-  });
+});
 
 const balancePerPayer = option({
     type: number,
@@ -46,14 +45,14 @@ const balancePerPayer = option({
     long: 'payer-balance',
     short: 'b',
     description: "Balance of payer in SOLs"
-  });
+});
 
 const outFile = option({
     type: string,
     defaultValue: () => "config.json",
     long: 'output-file',
     short: 'o'
-  });
+});
 
 const app = command(
     {
@@ -85,7 +84,7 @@ const app = command(
             ).then(_ => {
                 console.log("configuration finished");
             });
-          },
+        },
     }
 )
 
@@ -102,30 +101,30 @@ async function configure(
 ) {
     // create connections
     const connection = new Connection(
-      endpoint.toString(),
-      'confirmed' as Commitment,
+        endpoint.toString(),
+        'confirmed' as Commitment,
     );
 
     // configure authority
     const authority = getKeypairFromFile(authorityFile);
     const authorityBalance = await connection.getBalance(authority.publicKey);
     const requiredBalance = nbPayers * (balancePerPayer * LAMPORTS_PER_SOL) + 100 * LAMPORTS_PER_SOL;
-    if (authorityBalance < requiredBalance ) {
-      console.log("authority may have low balance balance " + authorityBalance + " required balance " + requiredBalance );
+    if (authorityBalance < requiredBalance) {
+        console.log("authority may have low balance balance " + authorityBalance + " required balance " + requiredBalance);
     }
-    
-    const programsData = programs.map( x => {
+
+    const programsData = programs.map(x => {
         //let programid = getKeypairFromFile(x.kp);
         let programId = Keypair.generate();
         return {
-            name : x.name,
-            programPath : x.program,
-            programKey : programId, 
+            name: x.name,
+            programPath: x.program,
+            programKey: programId,
         }
     });
 
     let programIds = programsData.map(x => {
-      return x.programKey.publicKey
+        return x.programKey.publicKey
     });
 
     console.log("starting program deployment");
@@ -133,9 +132,7 @@ async function configure(
     console.log("programs deployed");
 
     console.log("Creating payers");
-    let payers = await Promise.all(Array.from(Array(nbPayers).keys()).map(x => {
-      return createPayer(connection, authority, balancePerPayer)
-    }));
+    let payers = await Promise.all(Array.from(Array(nbPayers).keys()).map(_ => createPayer(connection, authority, balancePerPayer)));
     console.log("Payers created");
 
     console.log("Creating accounts")
@@ -143,16 +140,16 @@ async function configure(
     console.log("Accounts created")
 
     let programOutputData = programsData.map(x => {
-      return {
-        name : x.name,
-        program_id : x.programKey.publicKey
-      }
+        return {
+            name: x.name,
+            program_id: x.programKey.publicKey
+        }
     })
 
     let outputFile: OutputFile = {
-      programs: programOutputData,
-      known_accounts: accounts,
-      payers: payers.map(x => Array.from(x.secretKey)),
+        programs: programOutputData,
+        known_accounts: accounts,
+        payers: payers.map(x => Array.from(x.secretKey)),
     }
 
     console.log("creating output file")
