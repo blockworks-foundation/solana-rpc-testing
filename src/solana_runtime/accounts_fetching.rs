@@ -45,12 +45,7 @@ impl TestingTask for AccountsFetchingTests {
             AccountsFetchingTests::create_random_address(known_accounts.len());
         let number_of_fetched_accounts = NB_OF_ACCOUNTS_FETCHED_PER_TASK.min(known_accounts.len());
 
-        let hash_set_known = Arc::new(
-            known_accounts
-                .iter()
-                .map(|x| x.clone())
-                .collect::<HashSet<_>>(),
-        );
+        let hash_set_known = Arc::new(known_accounts.iter().copied().collect::<HashSet<_>>());
 
         let mut tasks = vec![];
         for i in 0..NB_ACCOUNT_FETCHING_TASKS {
@@ -86,7 +81,7 @@ impl TestingTask for AccountsFetchingTests {
                     let accounts_to_fetch = [known_accounts, unknown_accounts]
                         .concat()
                         .iter()
-                        .map(|x| (*x).clone())
+                        .map(|x| *(*x))
                         .collect::<Vec<_>>();
                     let res = rpc_client
                         .get_multiple_accounts(accounts_to_fetch.as_slice())
@@ -100,12 +95,8 @@ impl TestingTask for AccountsFetchingTests {
                                         if res[i].is_none() {
                                             println!("unable to fetch known account");
                                         }
-                                    } else {
-                                        if res[i].is_some() {
-                                            println!(
-                                                "fetched unknown account should not be possible"
-                                            );
-                                        }
+                                    } else if res[i].is_some() {
+                                        println!("fetched unknown account should not be possible");
                                     }
                                 }
                             } else {

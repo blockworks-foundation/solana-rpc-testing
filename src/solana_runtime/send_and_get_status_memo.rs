@@ -81,10 +81,7 @@ async fn send_and_confirm_transactions(
     while confirmation_time.elapsed() < Duration::from_secs(120)
         && !(map_of_txs.is_empty() && confirmed_count == tx_count)
     {
-        let signatures = map_of_txs
-            .iter()
-            .map(|x| x.key().clone())
-            .collect::<Vec<_>>();
+        let signatures = map_of_txs.iter().map(|x| *x.key()).collect::<Vec<_>>();
         if signatures.is_empty() {
             tokio::time::sleep(Duration::from_millis(1)).await;
             continue;
@@ -93,7 +90,7 @@ async fn send_and_confirm_transactions(
         if let Ok(res) = rpc_client.get_signature_statuses(&signatures).await {
             for i in 0..signatures.len() {
                 let tx_status = &res.value[i];
-                if let Some(_) = tx_status {
+                if tx_status.is_some() {
                     let signature = signatures[i];
                     let tx_data = map_of_txs.get(&signature).unwrap();
                     metric.number_of_confirmed_txs += 1;
@@ -170,11 +167,9 @@ impl TestingTask for SendAndConfrimTesting {
         let mut total_txs_confirmed = 0;
         let mut total_txs_unconfirmed = 0;
 
-        for task_res in tasks_res {
-            if let Ok(metric) = task_res {
-                total_txs_confirmed += metric.number_of_confirmed_txs;
-                total_txs_unconfirmed += metric.number_of_unconfirmed_txs;
-            }
+        for metric in tasks_res.into_iter().flatten() {
+            total_txs_confirmed += metric.number_of_confirmed_txs;
+            total_txs_unconfirmed += metric.number_of_unconfirmed_txs;
         }
 
         println!("Memo transaction sent and confrim results \n Number of transaction confirmed : {}, \n Number of transactions unconfirmed {}, took {}s", total_txs_confirmed, total_txs_unconfirmed, duration.as_secs());
