@@ -13,7 +13,7 @@ import { OutputFile } from './output_file';
 
 const numberOfAccountsToBeCreated = option({
     type: number,
-    defaultValue: () => 256,
+    defaultValue: () => 1024,
     long: 'number-of-accounts',
   });
 
@@ -120,13 +120,12 @@ async function configure(
         return {
             name : x.name,
             programPath : x.program,
-            programKey : programId.secretKey, 
+            programKey : programId, 
         }
     });
 
     let programIds = programsData.map(x => {
-      let kp = Keypair.fromSecretKey(x.programKey)
-      return kp.publicKey
+      return x.programKey.publicKey
     });
 
     console.log("starting program deployment");
@@ -143,10 +142,17 @@ async function configure(
     let accounts = await configure_accounts(connection, authority, numberOfAccountsToBeCreated, programIds);
     console.log("Accounts created")
 
+    let programOutputData = programsData.map(x => {
+      return {
+        name : x.name,
+        program_id : x.programKey.publicKey
+      }
+    })
+
     let outputFile: OutputFile = {
-      programs: programsData,
+      programs: programOutputData,
       known_accounts: accounts,
-      payers: payers.map(x => x.secretKey),
+      payers: payers.map(x => Array.from(x.secretKey)),
     }
 
     console.log("creating output file")

@@ -1,4 +1,8 @@
-use std::{str::FromStr, sync::Arc};
+use std::{
+    collections::HashSet,
+    str::FromStr,
+    sync::{atomic::AtomicU64, Arc},
+};
 
 use async_trait::async_trait;
 use const_env::from_env;
@@ -13,7 +17,7 @@ use crate::{config::Config, test_registry::TestingTask};
 const NB_ACCOUNT_FETCHING_TASKS: usize = 10;
 
 #[from_env]
-const NB_OF_ACCOUNTS_FETCHED_PER_TASK: usize = 256;
+const NB_OF_ACCOUNTS_FETCHED_PER_TASK: usize = 100;
 
 pub struct AccountsFetchingTests;
 
@@ -30,6 +34,7 @@ impl TestingTask for AccountsFetchingTests {
             return Ok(());
         }
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
+        let total_fetches = Arc::new(AtomicU64::new(0));
 
         let known_accounts = config
             .known_accounts
@@ -38,9 +43,16 @@ impl TestingTask for AccountsFetchingTests {
             .collect::<Vec<_>>();
         let unknown_accounts: Vec<Pubkey> =
             AccountsFetchingTests::create_random_address(known_accounts.len());
-        let number_of_fetched_accounts =
-            NB_OF_ACCOUNTS_FETCHED_PER_TASK.max(unknown_accounts.len());
+        let number_of_fetched_accounts = NB_OF_ACCOUNTS_FETCHED_PER_TASK.min(known_accounts.len());
 
+        let hash_set_known = Arc::new(
+            known_accounts
+                .iter()
+                .map(|x| x.clone())
+                .collect::<HashSet<_>>(),
+        );
+
+        let mut tasks = vec![];
         for i in 0..NB_ACCOUNT_FETCHING_TASKS {
             // each new task will fetch (100/NB_ACCOUNT_FETCHING_TASKS) * i percent of unknown accounts
             // so first task will fetch no unknown accounts and last will fetch almost all unknown accounts
@@ -48,12 +60,19 @@ impl TestingTask for AccountsFetchingTests {
             let unknown_accounts = unknown_accounts.clone();
             let duration = args.get_duration_to_run_test();
             let rpc_client = rpc_client.clone();
-            tokio::spawn(async move {
+            let hash_set_known = hash_set_known.clone();
+            let total_fetches = total_fetches.clone();
+            let task = tokio::spawn(async move {
                 let percentage_of_unknown_tasks =
-                    100.0 / (NB_ACCOUNT_FETCHING_TASKS as f64) * (i as f64);
-                let unknown_accounts_to_take =
-                    ((number_of_fetched_accounts as f64) * percentage_of_unknown_tasks) as usize;
-                let known_accounts_to_take = number_of_fetched_accounts - unknown_accounts_to_take;
+                    (100.0 / (NB_ACCOUNT_FETCHING_TASKS as f64)) * (i as f64);
+
+                println!("started fetching accounts task #{}", i);
+                let unknown_accounts_to_take = ((number_of_fetched_accounts as f64)
+                    * percentage_of_unknown_tasks
+                    / 100.0) as usize;
+                let known_accounts_to_take =
+                    number_of_fetched_accounts.saturating_sub(unknown_accounts_to_take);
+
                 let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(i as u64);
 
                 let instant = Instant::now();
@@ -69,13 +88,46 @@ impl TestingTask for AccountsFetchingTests {
                         .iter()
                         .map(|x| (*x).clone())
                         .collect::<Vec<_>>();
-                    let _ = rpc_client
+                    let res = rpc_client
                         .get_multiple_accounts(accounts_to_fetch.as_slice())
                         .await;
+                    total_fetches.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    match res {
+                        Ok(res) => {
+                            if res.len() == accounts_to_fetch.len() {
+                                for i in 0..accounts_to_fetch.len() {
+                                    if hash_set_known.contains(&accounts_to_fetch[i]) {
+                                        if res[i].is_none() {
+                                            println!("unable to fetch known account");
+                                        }
+                                    } else {
+                                        if res[i].is_some() {
+                                            println!(
+                                                "fetched unknown account should not be possible"
+                                            );
+                                        }
+                                    }
+                                }
+                            } else {
+                                println!("fetched accounts results mismatched");
+                            }
+                        }
+                        Err(e) => {
+                            println!("accounts fetching failed because {}", e);
+                        }
+                    }
                 }
             });
+            tasks.push(task);
         }
 
+        futures::future::join_all(tasks).await;
+        println!(
+            "Accounts fetching did {} requests of {} accounts in {} tasks",
+            total_fetches.load(std::sync::atomic::Ordering::Relaxed),
+            number_of_fetched_accounts,
+            NB_ACCOUNT_FETCHING_TASKS
+        );
         Ok(())
     }
 

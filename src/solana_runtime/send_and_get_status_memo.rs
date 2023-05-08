@@ -26,9 +26,9 @@ struct Metric {
     pub number_of_unconfirmed_txs: usize,
 }
 
-struct SendAndConfrimTesting;
+pub struct SendAndConfrimTesting;
 
-pub fn create_memo_tx(msg: &[u8], payer: &Keypair, blockhash: Hash) -> Transaction {
+fn create_memo_tx(msg: &[u8], payer: &Keypair, blockhash: Hash) -> Transaction {
     let memo = Pubkey::from_str(MEMO_PROGRAM_ID).unwrap();
 
     let instruction = Instruction::new_with_bytes(memo, msg, vec![]);
@@ -36,7 +36,7 @@ pub fn create_memo_tx(msg: &[u8], payer: &Keypair, blockhash: Hash) -> Transacti
     Transaction::new(&[payer], message, blockhash)
 }
 
-pub fn generate_random_strings(num_of_txs: usize, random_seed: Option<u64>) -> Vec<Vec<u8>> {
+fn generate_random_strings(num_of_txs: usize, random_seed: Option<u64>) -> Vec<Vec<u8>> {
     let seed = random_seed.map_or(0, |x| x);
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
     (0..num_of_txs)
@@ -121,6 +121,8 @@ impl TestingTask for SendAndConfrimTesting {
         if !args.test_send_and_confirm_transactions() {
             return Ok(());
         }
+
+        println!("started sending and confirming memo transactions");
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
         let block_hash: Arc<RwLock<Hash>> = Arc::new(RwLock::new(Hash::default()));
 
@@ -162,7 +164,9 @@ impl TestingTask for SendAndConfrimTesting {
             run_interval_ms.tick().await;
         }
 
+        let instant = Instant::now();
         let tasks_res = futures::future::join_all(tasks).await;
+        let duration = instant.elapsed();
         let mut total_txs_confirmed = 0;
         let mut total_txs_unconfirmed = 0;
 
@@ -173,7 +177,7 @@ impl TestingTask for SendAndConfrimTesting {
             }
         }
 
-        log::info!("Memo transaction sent and confrim results \n Number of transaction confirmed : {}, \n Number of transactions unconfirmed {},", total_txs_confirmed, total_txs_unconfirmed);
+        println!("Memo transaction sent and confrim results \n Number of transaction confirmed : {}, \n Number of transactions unconfirmed {}, took {}s", total_txs_confirmed, total_txs_unconfirmed, duration.as_secs());
         Ok(())
     }
 
