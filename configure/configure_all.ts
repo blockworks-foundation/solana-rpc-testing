@@ -3,12 +3,15 @@ import { command, number, option, string, run } from 'cmd-ts';
 import * as fs from 'fs';
 
 import programs from './programs.json';
-import { Commitment, Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Commitment, Connection, Keypair, LAMPORTS_PER_SOL, Transaction } from '@solana/web3.js';
 import { getKeypairFromFile } from './common_utils';
 import { deploy_programs } from './deploy_programs';
 import { createPayer } from './general/create_payers';
 import { configure_accounts } from './general/accounts';
 import { OutputFile } from './output_file';
+import { getProviderFromKeypair } from './anchor_utils';
+import { MintUtils } from './general/mint_utils';
+import { configureOpenbookV2 } from './openbook-v2/configure_openbook';
 
 const numberOfAccountsToBeCreated = option({
     type: number,
@@ -47,6 +50,14 @@ const balancePerPayer = option({
     description: "Balance of payer in SOLs"
 });
 
+const nbMints = option({
+  type: number,
+  defaultValue: () => 10,
+  long: 'number-of-mints',
+  short: 'm',
+  description: "Number of mints"
+});
+
 const outFile = option({
     type: string,
     defaultValue: () => "config.json",
@@ -63,6 +74,7 @@ const app = command(
             authority,
             nbPayers,
             balancePerPayer,
+            nbMints,
             outFile,
         },
         handler: ({
@@ -71,6 +83,7 @@ const app = command(
             authority,
             nbPayers,
             balancePerPayer,
+            nbMints,
             outFile,
         }) => {
             console.log("configuring a new test instance");
@@ -80,6 +93,7 @@ const app = command(
                 authority,
                 nbPayers,
                 balancePerPayer,
+                nbMints,
                 outFile,
             ).then(_ => {
                 console.log("configuration finished");
@@ -97,6 +111,7 @@ async function configure(
     authorityFile: String,
     nbPayers: number,
     balancePerPayer: number,
+    nbMints: number,
     outFile: String,
 ) {
     // create connections
@@ -113,22 +128,21 @@ async function configure(
         console.log("authority may have low balance balance " + authorityBalance + " required balance " + requiredBalance);
     }
 
-    const programsData = programs.map(x => {
-        //let programid = getKeypairFromFile(x.kp);
-        let programId = Keypair.generate();
+    let programOutputData = programs.map(x => {
+
+        let kp = getKeypairFromFile(x.programKeyPath);
         return {
             name: x.name,
-            programPath: x.program,
-            programKey: programId,
+            program_id: kp.publicKey
         }
-    });
+    })
 
-    let programIds = programsData.map(x => {
-        return x.programKey.publicKey
+    let programIds = programOutputData.map(x => {
+        return x.program_id
     });
 
     console.log("starting program deployment");
-    await deploy_programs(connection, authority, programsData);
+    await deploy_programs(endpoint, authorityFile.toString(), programs);
     console.log("programs deployed");
 
     console.log("Creating payers");
@@ -139,17 +153,22 @@ async function configure(
     let accounts = await configure_accounts(connection, authority, numberOfAccountsToBeCreated, programIds);
     console.log("Accounts created")
 
-    let programOutputData = programsData.map(x => {
-        return {
-            name: x.name,
-            program_id: x.programKey.publicKey
-        }
-    })
+    console.log("Creating Mints");
+    let mintUtils = new MintUtils(connection, authority);
+    let mints = await mintUtils.createMints(nbMints);
+    console.log("Mints created")
+
+    console.log("Configuring openbook-v2")
+    let index = programs.findIndex(x => x.name === "openbook_v2");
+    let openbookProgramId = programOutputData[index].program_id;
+    await configureOpenbookV2(connection, authority, mintUtils, mints, openbookProgramId);
+    console.log("Finished configuring openbook")
 
     let outputFile: OutputFile = {
         programs: programOutputData,
         known_accounts: accounts,
         payers: payers.map(x => Array.from(x.secretKey)),
+        mints: mints,
     }
 
     console.log("creating output file")

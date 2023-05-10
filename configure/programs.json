@@ -1,7 +1,12 @@
 [
     {
         "name": "pyth_mock",
-        "program": "programs/pyth_mock.so",
-        "kp": "programs/pyth_mock.json"
+        "programPath": "programs/pyth_mock.so",
+        "programKeyPath": "programs/pyth_mock.json"
+    },
+    {
+        "name": "openbook_v2",
+        "programPath": "programs/openbook_v2.so",
+        "programKeyPath": "programs/openbook_v2-keypair.json"
     }
 ]

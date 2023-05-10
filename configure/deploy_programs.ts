@@ -1,24 +1,27 @@
 import { Connection, Keypair, LAMPORTS_PER_SOL, SystemProgram, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import * as web3 from "@solana/web3.js";
+import { exec } from "child_process";
 import * as fs from "fs"
+import { promisify } from "util";
 
 export interface ProgramData {
-    name: String,
-    programPath: String,
-    programKey: Keypair,
+    name: string,
+    programPath: string,
+    programKeyPath: string,
 }
 
-export async function deploy_programs(connection: Connection, payer: Keypair, programs: ProgramData[]) {
+export async function deploy_programs(url: String, payer: string, programs: ProgramData[]) {
     for (const program of programs) {
-        let content = fs.readFileSync(program.programPath.toString(), { encoding: null, flag: 'r' });
-        // retries to load a program 10 times
-        for (let i = 1; i <= 10; ++i) {
-            let programLoaded = await web3.BpfLoader.load(connection, payer, program.programKey, content, web3.BPF_LOADER_PROGRAM_ID);
-            if (!programLoaded) {
-                console.log("program " + program.name + " loaded unsuccessfully (" + i + "/10)");
-            } else {
-                break;
-            }
+        let cmd = 'solana program deploy --program-id ' + program.programKeyPath + ' --keypair ' +  payer + ' --url ' + url + ' ' + program.programPath;
+        let execPromise = promisify(exec)
+        // wait for exec to complete
+        const {stdout, stderr} = await execPromise(cmd);
+        if (stdout.length > 0) {
+            console.log(stdout);
+        }
+
+        if (stderr.length > 0) {
+            console.log(stderr);
         }
     }
 }

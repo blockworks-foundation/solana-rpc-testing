@@ -9,4 +9,5 @@ export interface OutputFile {
     payers: number[][],
     programs: ProgramOutputData[],
     known_accounts: PublicKey[],
+    mints: PublicKey[],
 }
