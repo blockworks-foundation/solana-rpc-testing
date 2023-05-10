@@ -1,4 +1,4 @@
-use crate::test_registry::TestingTask;
+use crate::{metrics::Metrics, test_registry::TestingTask};
 use async_trait::async_trait;
 use const_env::from_env;
 use dashmap::DashSet;
@@ -114,11 +114,7 @@ impl TestingTask for SendAndConfrimTesting {
         &self,
         args: crate::cli::Args,
         config: crate::config::Config,
-    ) -> anyhow::Result<()> {
-        if !args.test_send_and_confirm_transactions() {
-            return Ok(());
-        }
-
+    ) -> anyhow::Result<Metrics> {
         println!("started sending and confirming memo transactions");
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
         let block_hash: Arc<RwLock<Hash>> = Arc::new(RwLock::new(Hash::default()));
@@ -173,10 +169,11 @@ impl TestingTask for SendAndConfrimTesting {
         }
 
         println!("Memo transaction sent and confrim results \n Number of transaction confirmed : {}, \n Number of transactions unconfirmed {}, took {}s", total_txs_confirmed, total_txs_unconfirmed, duration.as_secs());
-        Ok(())
+
+        Ok(todo!())
     }
 
-    fn get_name(&self) -> String {
-        "Send and confirm memo transaction".to_string()
+    fn get_name(&self) -> &'static str {
+        "Send and confirm memo transaction"
     }
 }

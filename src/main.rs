@@ -1,5 +1,6 @@
 mod cli;
 mod config;
+mod metrics;
 mod solana_runtime;
 mod test_registry;
 
@@ -7,7 +8,6 @@ use cli::Args;
 use config::Config;
 
 use clap::Parser;
-use test_registry::TestRegistry;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {
@@ -26,8 +26,8 @@ async fn main() -> anyhow::Result<()> {
         return Err(anyhow::Error::msg("No payers"));
     }
 
-    let mut registry = TestRegistry::new();
-    registry.register_all();
+    let registry = args.generate_test_registry();
     registry.start_testing(args, config_json).await;
+
     Ok(())
 }

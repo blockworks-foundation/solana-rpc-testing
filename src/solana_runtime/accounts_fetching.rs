@@ -11,7 +11,7 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
 use tokio::time::Instant;
 
-use crate::{config::Config, test_registry::TestingTask};
+use crate::{config::Config, test_registry::TestingTask, metrics::Metrics};
 
 #[from_env]
 const NB_ACCOUNT_FETCHING_TASKS: usize = 10;
@@ -29,10 +29,7 @@ impl AccountsFetchingTests {
 
 #[async_trait]
 impl TestingTask for AccountsFetchingTests {
-    async fn test(&self, args: crate::cli::Args, config: Config) -> anyhow::Result<()> {
-        if !args.test_accounts_fetching() {
-            return Ok(());
-        }
+    async fn test(&self, args: crate::cli::Args, config: Config) -> anyhow::Result<Metrics> {
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
         let total_fetches = Arc::new(AtomicU64::new(0));
 
@@ -119,10 +116,11 @@ impl TestingTask for AccountsFetchingTests {
             number_of_fetched_accounts,
             NB_ACCOUNT_FETCHING_TASKS
         );
-        Ok(())
+
+        Ok(todo!())
     }
 
-    fn get_name(&self) -> String {
-        "Accounts Fetching".to_string()
+    fn get_name(&self) -> &'static str {
+        "Accounts Fetching"
     }
 }

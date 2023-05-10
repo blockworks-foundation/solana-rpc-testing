@@ -1,45 +1,31 @@
 use async_trait::async_trait;
 
-use crate::{
-    cli::Args,
-    config::Config,
-    solana_runtime::{
-        accounts_fetching::AccountsFetchingTests, send_and_get_status_memo::SendAndConfrimTesting,
-    },
-};
-use std::sync::Arc;
+use crate::{cli::Args, config::Config, metrics::Metrics};
 
 #[async_trait]
 pub trait TestingTask: Send + Sync {
-    async fn test(&self, args: Args, config: Config) -> anyhow::Result<()>;
-    fn get_name(&self) -> String;
+    async fn test(&self, args: Args, config: Config) -> anyhow::Result<Metrics>;
+    fn get_name(&self) -> &'static str;
 }
 
+#[derive(Default)]
 pub struct TestRegistry {
-    tests: Vec<Arc<dyn TestingTask>>,
+    tests: Vec<Box<dyn TestingTask>>,
 }
 
 impl TestRegistry {
-    pub fn new() -> Self {
-        Self { tests: vec![] }
-    }
-
-    fn register(&mut self, test: Arc<dyn TestingTask>) {
+    pub fn register(&mut self, test: Box<dyn TestingTask>) {
         self.tests.push(test);
     }
 
-    pub fn register_all(&mut self) {
-        self.register(Arc::new(AccountsFetchingTests {}));
-        self.register(Arc::new(SendAndConfrimTesting {}));
-    }
-
-    pub async fn start_testing(&self, args: Args, config: Config) {
-        let mut tasks = vec![];
-        for test in &self.tests {
-            let test = test.clone();
+    pub async fn start_testing(self, args: Args, config: Config) {
+        let tasks = self.tests.into_iter().map(|test| {
             let args = args.clone();
             let config = config.clone();
-            let task = tokio::spawn(async move {
+
+            tokio::spawn(async move {
+                log::info!("test {}", test.get_name());
+
                 match test.test(args, config).await {
                     Ok(_) => {
                         println!("test {} passed", test.get_name());
@@ -48,9 +34,9 @@ impl TestRegistry {
                         println!("test {} failed with error {}", test.get_name(), e);
                     }
                 }
-            });
-            tasks.push(task);
-        }
+            })
+        });
+
         futures::future::join_all(tasks).await;
     }
 }
