@@ -1,5 +1,4 @@
-use crate::metrics::Metrics;
-use crate::{cli::Args, config::Config, test_registry::TestingTask};
+use crate::{metrics::Metrics, cli::Args, config::Config, test_registry::TestingTask};
 
 pub struct GetBlockTest;
 

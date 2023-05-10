@@ -1,14 +1,15 @@
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use clap::{command, Parser};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 
-use crate::solana_runtime::accounts_fetching::AccountsFetchingTests;
-use crate::solana_runtime::get_block::GetBlockTest;
-use crate::solana_runtime::get_slot::GetSlotTest;
-use crate::solana_runtime::send_and_get_status_memo::SendAndConfrimTesting;
-use crate::test_registry::TestRegistry;
+use crate::{
+    solana_runtime::{
+        accounts_fetching::AccountsFetchingTests, get_block::GetBlockTest, get_slot::GetSlotTest,
+        send_and_get_status_memo::SendAndConfrimTesting,
+    },
+    test_registry::TestRegistry,
+};
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
