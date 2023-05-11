@@ -28,12 +28,8 @@ impl TestRegistry {
                 log::info!("test {name}");
 
                 match test.test(args, config).await {
-                    Ok(_) => {
-                        log::info!("test {name} passed");
-                    }
-                    Err(e) => {
-                        log::info!("test {} failed with error {name}", e);
-                    }
+                    Ok(_) => log::info!("test {name} passed"),
+                    Err(e) => log::info!("test {name} failed with error {e}"),
                 }
             })
         });
