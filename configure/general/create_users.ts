@@ -5,9 +5,9 @@ import * as splToken from '@solana/spl-token'
 import { OpenOrders } from "../openbook-v2/configure_openbook";
 
 export interface User {
-    keypair: Keypair,
-    token : TokenAccountData[],
-    openOrders: OpenOrders[],
+    secret: number[],
+    token_data : TokenAccountData[],
+    open_orders: OpenOrders[],
 }
 
 export async function createUser(connection: Connection, authority: Keypair, balancePerPayer: number): Promise<Keypair> {
@@ -27,7 +27,7 @@ export async function createUser(connection: Connection, authority: Keypair, bal
 
 interface TokenAccountData {
     mint: PublicKey,
-    tokenAccount: PublicKey
+    token_account: PublicKey
 }
 
 export async function mintUser(connection: Connection, authority: Keypair, mints: PublicKey[], mintUtils: MintUtils, user: PublicKey, amount: number) : Promise<TokenAccountData[]> {
@@ -37,7 +37,7 @@ export async function mintUser(connection: Connection, authority: Keypair, mints
             await splToken.mintTo(connection, authority, mint, tokenAccount, authority, amount);
             return {
                 mint: mint,
-                tokenAccount: tokenAccount
+                token_account: tokenAccount
             }
         })
     )

@@ -93,7 +93,7 @@ impl TestingTask for AccountsFetchingTests {
                                 for i in 0..accounts_to_fetch.len() {
                                     if hash_set_known.contains(&accounts_to_fetch[i]) {
                                         if res[i].is_none() {
-                                            println!("unable to fetch known account");
+                                            println!("unable to fetch known account {}", accounts_to_fetch[i]);
                                         }
                                     } else if res[i].is_some() {
                                         println!("fetched unknown account should not be possible");

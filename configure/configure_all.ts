@@ -183,9 +183,9 @@ async function configure(
 
     let userData: User [] = users.map((user, i) => {
         return {
-            keypair: user,
-            openOrders: userOpenOrders[i],
-            token: tokenAccounts[i],
+            secret: Array.from(user.secretKey),
+            open_orders: userOpenOrders[i],
+            token_data: tokenAccounts[i],
         }
     })
     
@@ -195,10 +195,10 @@ async function configure(
     let accounts = await configure_accounts(connection, authority, numberOfAccountsToBeCreated, programIds);
 
     // adding known accounts
-    const marketAccountsList = markets.map(market => [market.asks, market.bids, market.marketPk, market.oracle, market.quoteVault, market.baseVault, market.baseMint, market.quoteMint] ).flat();
+    const marketAccountsList = markets.map(market => [market.asks, market.bids, market.market_pk, market.oracle, market.quote_vault, market.base_vault, market.base_mint, market.quote_mint] ).flat();
     const userAccountsList = userData.map(user => {
-        const allOpenOrdersAccounts = user.openOrders.map(x=>x.openOrders).flat();
-        const allTokenAccounts = user.token.map(x => x.tokenAccount);
+        const allOpenOrdersAccounts = user.open_orders.map(x=>x.open_orders).flat();
+        const allTokenAccounts = user.token_data.map(x => x.token_account);
         return allOpenOrdersAccounts.concat(allTokenAccounts)
     }).flat()
     accounts = accounts.concat(marketAccountsList).concat(userAccountsList);

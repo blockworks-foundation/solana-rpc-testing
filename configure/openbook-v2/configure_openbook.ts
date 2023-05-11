@@ -8,7 +8,7 @@ import { BN, Program, web3 } from "@project-serum/anchor";
 
 export interface OpenOrders {
     market: PublicKey,
-    openOrders: PublicKey
+    open_orders: PublicKey
 }
 
 export class OpenbookConfigurator {
@@ -39,26 +39,26 @@ export class OpenbookConfigurator {
         const openOrders = await Promise.all(
             markets.map(async(market) => {
                 let accountIndex = new BN(0);
-                let [openOrders, _tmp] = PublicKey.findProgramAddressSync([Buffer.from("OpenOrders"), user.publicKey.toBuffer(), market.marketPk.toBuffer(), accountIndex.toBuffer("le", 4)], this.openbookProgramId)
+                let [openOrders, _tmp] = PublicKey.findProgramAddressSync([Buffer.from("OpenOrders"), user.publicKey.toBuffer(), market.market_pk.toBuffer(), accountIndex.toBuffer("le", 4)], this.openbookProgramId)
 
                 await program.methods.initOpenOrders(
                     0,
                     64
                 ).accounts({
                     openOrdersAccount: openOrders,
-                    market: market.marketPk,
+                    market: market.market_pk,
                     owner: user.publicKey,
                     payer: this.anchorProvider.publicKey,
                     systemProgram: web3.SystemProgram.programId,
                 }).signers([user]).rpc();
-                return [market.marketPk, openOrders]
+                return [market.market_pk, openOrders]
             })
         )
 
         return openOrders.map(x=> {
             return {
                 market : x[0],
-                openOrders : x[1],
+                open_orders : x[1],
             }
         })
     }

@@ -10,16 +10,16 @@ import { TestProvider } from '../anchor_utils';
 export interface Market {
     name: string,
     admin : number[],
-    marketPk: PublicKey
+    market_pk: PublicKey
     oracle: PublicKey,
     asks: PublicKey,
     bids: PublicKey,
-    eventQueue: PublicKey,
-    baseVault: PublicKey,
-    quoteVault: PublicKey,
-    baseMint: PublicKey,
-    quoteMint: PublicKey,
-    marketIndex: number,
+    event_queue: PublicKey,
+    base_vault: PublicKey,
+    quote_vault: PublicKey,
+    base_mint: PublicKey,
+    quote_mint: PublicKey,
+    market_index: number,
 }
 
 export async function createMarket(anchorProvider: TestProvider, mintUtils: MintUtils, adminKp: Keypair, openbookProgramId: PublicKey, baseMint: PublicKey, quoteMint: PublicKey, index: number): Promise<Market> {
@@ -85,13 +85,13 @@ export async function createMarket(anchorProvider: TestProvider, mintUtils: Mint
         name,
         bids,
         asks,
-        eventQueue,
-        baseMint,
-        baseVault,
-        marketIndex,
-        marketPk,
+        event_queue: eventQueue,
+        base_mint: baseMint,
+        base_vault: baseVault,
+        market_index: index,
+        market_pk: marketPk,
         oracle: oracleId,
-        quoteMint,
-        quoteVault,
+        quote_mint: quoteMint,
+        quote_vault: quoteVault,
     }
 }

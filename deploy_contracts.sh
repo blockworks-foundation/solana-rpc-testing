@@ -6,6 +6,7 @@ SCRIPT_DIR=$( dirname -- "$0"; )
 OPENBOOK_PID=$(solana address -k $SCRIPT_DIR/configure/programs/openbook_v2-keypair.json)
 echo "Openbook PID $OPENBOOK_PID"
 cd $SCRIPT_DIR/thirdparty/openbook-v2
+git pull
 git submodule update --init
 
 sed 's@BfxZj7ckfRGHxByn7aHgH2puyXhfjAUvULtRjJo4rd8X@'"$OPENBOOK_PID"'@' programs/openbook-v2/src/lib.rs > programs/openbook-v2/src/lib-tmp.rs
