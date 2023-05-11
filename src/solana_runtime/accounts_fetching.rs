@@ -30,9 +30,6 @@ impl AccountsFetchingTests {
 #[async_trait]
 impl TestingTask for AccountsFetchingTests {
     async fn test(&self, args: crate::cli::Args, config: Config) -> anyhow::Result<()> {
-        if !args.test_accounts_fetching() {
-            return Ok(());
-        }
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
         let total_fetches = Arc::new(AtomicU64::new(0));
 
@@ -119,10 +116,11 @@ impl TestingTask for AccountsFetchingTests {
             number_of_fetched_accounts,
             NB_ACCOUNT_FETCHING_TASKS
         );
+
         Ok(())
     }
 
-    fn get_name(&self) -> String {
-        "Accounts Fetching".to_string()
+    fn get_name(&self) -> &'static str {
+        "Accounts Fetching"
     }
 }

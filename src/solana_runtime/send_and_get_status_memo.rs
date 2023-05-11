@@ -115,10 +115,6 @@ impl TestingTask for SendAndConfrimTesting {
         args: crate::cli::Args,
         config: crate::config::Config,
     ) -> anyhow::Result<()> {
-        if !args.test_send_and_confirm_transactions() {
-            return Ok(());
-        }
-
         println!("started sending and confirming memo transactions");
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
         let block_hash: Arc<RwLock<Hash>> = Arc::new(RwLock::new(Hash::default()));
@@ -147,14 +143,14 @@ impl TestingTask for SendAndConfrimTesting {
         let mut tasks = vec![];
         let payers = config.get_payers();
         for seed in 0..nb_runs {
-            let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed as u64);
+            let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
             let payer = payers.choose(&mut rng).unwrap();
             let payer = Keypair::from_bytes(payer.to_bytes().as_slice()).unwrap();
             tasks.push(tokio::spawn(send_and_confirm_transactions(
                 rpc_client.clone(),
                 NB_MEMO_TRANSACTIONS_SENT_PER_SECOND,
                 payer,
-                seed as u64,
+                seed,
                 block_hash.clone(),
             )));
             // wait for an interval
@@ -173,10 +169,11 @@ impl TestingTask for SendAndConfrimTesting {
         }
 
         println!("Memo transaction sent and confrim results \n Number of transaction confirmed : {}, \n Number of transactions unconfirmed {}, took {}s", total_txs_confirmed, total_txs_unconfirmed, duration.as_secs());
+
         Ok(())
     }
 
-    fn get_name(&self) -> String {
-        "Send and confirm memo transaction".to_string()
+    fn get_name(&self) -> &'static str {
+        "Send and confirm memo transaction"
     }
 }
