@@ -23,8 +23,8 @@ async fn main() -> anyhow::Result<()> {
         .context("Should have been able to read the file")?;
     let config_json: Config = serde_json::from_str(&contents).context("Config file not valid")?;
 
-    if config_json.payers.is_empty() {
-        log::error!("config file is missing payers");
+    if config_json.users.is_empty() {
+        log::error!("Config file is missing payers");
         bail!("No payers");
     }
 

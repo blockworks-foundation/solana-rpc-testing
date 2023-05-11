@@ -1,27 +1,28 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import IDL from '../programs/openbook_v2.json'
-import { AnchorProvider, Idl, Program, web3, BN } from '@project-serum/anchor';
+import { Program, web3, BN } from '@project-serum/anchor';
 import { createAccount } from '../general/solana_utils';
 import { MintUtils } from '../general/mint_utils';
 import { I80F48, I80F48Dto } from '@blockworks-foundation/mango-v4';
 import { OpenbookV2 } from './openbook_v2';
+import { TestProvider } from '../anchor_utils';
 
 export interface Market {
     name: string,
     admin : number[],
-    marketPk: PublicKey
+    market_pk: PublicKey
     oracle: PublicKey,
     asks: PublicKey,
     bids: PublicKey,
-    eventQueue: PublicKey,
-    baseVault: PublicKey,
-    quoteVault: PublicKey,
-    baseMint: PublicKey,
-    quoteMint: PublicKey,
-    marketIndex: number,
+    event_queue: PublicKey,
+    base_vault: PublicKey,
+    quote_vault: PublicKey,
+    base_mint: PublicKey,
+    quote_mint: PublicKey,
+    market_index: number,
 }
 
-export async function createMarket(anchorProvider: AnchorProvider, mintUtils: MintUtils, adminKp: Keypair, openbookProgramId: PublicKey, baseMint: PublicKey, quoteMint: PublicKey, payer: Keypair, index: number): Promise<Market> {
+export async function createMarket(anchorProvider: TestProvider, mintUtils: MintUtils, adminKp: Keypair, openbookProgramId: PublicKey, baseMint: PublicKey, quoteMint: PublicKey, index: number): Promise<Market> {
     let program = new Program<OpenbookV2>(
         IDL as OpenbookV2,
         openbookProgramId,
@@ -35,23 +36,23 @@ export async function createMarket(anchorProvider: AnchorProvider, mintUtils: Mi
         oracle: oracleId,
         admin,
         mint: baseMint,
-        payer: payer.publicKey,
+        payer: anchorProvider.wallet.publicKey,
         systemProgram: web3.SystemProgram.programId,
     })
-    .signers([adminKp, payer])
+    .signers([adminKp])
     .rpc();
 
     // bookside size = 123720
-    let asks = await createAccount(anchorProvider.connection, payer, 123720, openbookProgramId);
-    let bids = await createAccount(anchorProvider.connection, payer, 123720, openbookProgramId);
-    let eventQueue = await createAccount(anchorProvider.connection, payer, 97688, openbookProgramId);
+    let asks = await createAccount(anchorProvider.connection, anchorProvider.keypair, 123720, openbookProgramId);
+    let bids = await createAccount(anchorProvider.connection, anchorProvider.keypair, 123720, openbookProgramId);
+    let eventQueue = await createAccount(anchorProvider.connection, anchorProvider.keypair, 97688, openbookProgramId);
     let marketIndex : BN = new BN(index);
 
-    let [marketPk, _tmp2] = PublicKey.findProgramAddressSync([Buffer.from("Market"), marketIndex.toBuffer("le", 4)], openbookProgramId)
+    let [marketPk, _tmp2] = PublicKey.findProgramAddressSync([Buffer.from("Market"), admin.toBuffer(), marketIndex.toBuffer("le", 4)], openbookProgramId)
 
-    let baseVault = await mintUtils.createTokenAccount(baseMint, payer, marketPk);
-    let quoteVault = await mintUtils.createTokenAccount(quoteMint, payer, marketPk);
-    let name = 'token at index ' + index.toString() + ' wrt at index 0';
+    let baseVault = await mintUtils.createTokenAccount(baseMint, anchorProvider.keypair, marketPk);
+    let quoteVault = await mintUtils.createTokenAccount(quoteMint, anchorProvider.keypair, marketPk);
+    let name = 'index ' + index.toString() + ' wrt 0';
 
     await program.methods.createMarket(
         marketIndex, 
@@ -68,7 +69,7 @@ export async function createMarket(anchorProvider: AnchorProvider, mintUtils: Mi
             bids,
             asks,
             eventQueue,
-            payer: payer.publicKey,
+            payer: anchorProvider.publicKey,
             baseVault,
             quoteVault,
             baseMint,
@@ -76,7 +77,7 @@ export async function createMarket(anchorProvider: AnchorProvider, mintUtils: Mi
             systemProgram: web3.SystemProgram.programId,
             oracle: oracleId,
         }
-    ).signers([adminKp, payer])
+    ).signers([adminKp])
     .rpc();
 
     return {
@@ -84,13 +85,13 @@ export async function createMarket(anchorProvider: AnchorProvider, mintUtils: Mi
         name,
         bids,
         asks,
-        eventQueue,
-        baseMint,
-        baseVault,
-        marketIndex,
-        marketPk,
+        event_queue: eventQueue,
+        base_mint: baseMint,
+        base_vault: baseVault,
+        market_index: index,
+        market_pk: marketPk,
         oracle: oracleId,
-        quoteMint,
-        quoteVault,
+        quote_mint: quoteMint,
+        quote_vault: quoteVault,
     }
 }

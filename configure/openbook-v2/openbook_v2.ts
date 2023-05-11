@@ -4,6 +4,9 @@ export type OpenbookV2 = {
   "instructions": [
     {
       "name": "createMarket",
+      "docs": [
+        "Create a [`Market`](crate::state::Market) for a given token pair."
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -149,6 +152,24 @@ export type OpenbookV2 = {
     },
     {
       "name": "placeOrder",
+      "docs": [
+        "Place an order.",
+        "",
+        "Different types of orders have different effects on the order book,",
+        "as described in [`PlaceOrderType`](crate::state::PlaceOrderType).",
+        "",
+        "`price_lots` refers to the price in lots: the number of quote lots",
+        "per base lot. It is ignored for `PlaceOrderType::Market` orders.",
+        "",
+        "`expiry_timestamp` is a unix timestamp for when this order should",
+        "expire. If 0 is passed in, the order will never expire. If the time",
+        "is in the past, the instruction is skipped. Timestamps in the future",
+        "are reduced to now + 65,535s.",
+        "",
+        "`limit` determines the maximum number of orders from the book to fill,",
+        "and can be used to limit CU spent. When the limit is reached, processing",
+        "stops and the instruction succeeds."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -377,6 +398,12 @@ export type OpenbookV2 = {
     },
     {
       "name": "placeTakeOrder",
+      "docs": [
+        "Place an order that shall take existing liquidity off of the book, not",
+        "add a new order off the book.",
+        "",
+        "This type of order allows for instant token settlement for the taker."
+      ],
       "accounts": [
         {
           "name": "owner",
@@ -483,6 +510,31 @@ export type OpenbookV2 = {
     },
     {
       "name": "consumeEvents",
+      "docs": [
+        "Process up to `limit` [events](crate::state::AnyEvent).",
+        "",
+        "When a user places a 'take' order, they do not know beforehand which",
+        "market maker will have placed the 'make' order that they get executed",
+        "against. This prevents them from passing in a market maker's",
+        "[`OpenOrdersAccount`](crate::state::OpenOrdersAccount), which is needed",
+        "to credit/debit the relevant tokens to/from the maker. As such, Openbook",
+        "uses a 'crank' system, where `place_order` only emits events, and",
+        "`consume_events` handles token settlement.",
+        "",
+        "Currently, there are two types of events: [`FillEvent`](crate::state::FillEvent)s",
+        "and [`OutEvent`](crate::state::OutEvent)s.",
+        "",
+        "A `FillEvent` is emitted when an order is filled, and it is handled by",
+        "debiting whatever the taker is selling from the taker and crediting",
+        "it to the maker, and debiting whatever the taker is buying from the",
+        "maker and crediting it to the taker. Note that *no tokens are moved*,",
+        "these are just debits and credits to each party's [`Position`](crate::state::Position).",
+        "",
+        "An `OutEvent` is emitted when a limit order needs to be removed from",
+        "the book during a `place_order` invocation, and it is handled by",
+        "crediting whatever the maker would have sold (quote token in a bid,",
+        "base token in an ask) back to the maker."
+      ],
       "accounts": [
         {
           "name": "market",
@@ -504,6 +556,12 @@ export type OpenbookV2 = {
     },
     {
       "name": "cancelOrder",
+      "docs": [
+        "Cancel an order by its `order_id`.",
+        "",
+        "Note that this doesn't emit an [`OutEvent`](crate::state::OutEvent) because a",
+        "maker knows that they will be passing in their own [`OpenOrdersAccount`](crate::state::OpenOrdersAccount)."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -540,6 +598,12 @@ export type OpenbookV2 = {
     },
     {
       "name": "cancelOrderByClientOrderId",
+      "docs": [
+        "Cancel an order by its `client_order_id`.",
+        "",
+        "Note that this doesn't emit an [`OutEvent`](crate::state::OutEvent) because a",
+        "maker knows that they will be passing in their own [`OpenOrdersAccount`](crate::state::OpenOrdersAccount)."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -576,6 +640,9 @@ export type OpenbookV2 = {
     },
     {
       "name": "cancelAllOrders",
+      "docs": [
+        "Cancel up to `limit` orders."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -612,6 +679,9 @@ export type OpenbookV2 = {
     },
     {
       "name": "cancelAllOrdersBySide",
+      "docs": [
+        "Cancel up to `limit` orders on a single side of the book."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -656,6 +726,13 @@ export type OpenbookV2 = {
     },
     {
       "name": "deposit",
+      "docs": [
+        "Desposit a certain amount of `base_amount_lots` and `quote_amount_lots`",
+        "into one's [`Position`](crate::state::Position).",
+        "",
+        "Makers might wish to `deposit`, rather than have actual tokens moved for",
+        "each trade, in order to reduce CUs."
+      ],
       "accounts": [
         {
           "name": "owner",
@@ -716,6 +793,9 @@ export type OpenbookV2 = {
     },
     {
       "name": "settleFunds",
+      "docs": [
+        "Withdraw any available tokens."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -762,6 +842,9 @@ export type OpenbookV2 = {
     },
     {
       "name": "sweepFees",
+      "docs": [
+        "Sweep fees, as a [`Market`](crate::state::Market)'s admin."
+      ],
       "accounts": [
         {
           "name": "market",
@@ -793,6 +876,9 @@ export type OpenbookV2 = {
     },
     {
       "name": "closeMarket",
+      "docs": [
+        "Close a [`Market`](crate::state::Market)."
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -2877,6 +2963,9 @@ export const IDL: OpenbookV2 = {
   "instructions": [
     {
       "name": "createMarket",
+      "docs": [
+        "Create a [`Market`](crate::state::Market) for a given token pair."
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -3022,6 +3111,24 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "placeOrder",
+      "docs": [
+        "Place an order.",
+        "",
+        "Different types of orders have different effects on the order book,",
+        "as described in [`PlaceOrderType`](crate::state::PlaceOrderType).",
+        "",
+        "`price_lots` refers to the price in lots: the number of quote lots",
+        "per base lot. It is ignored for `PlaceOrderType::Market` orders.",
+        "",
+        "`expiry_timestamp` is a unix timestamp for when this order should",
+        "expire. If 0 is passed in, the order will never expire. If the time",
+        "is in the past, the instruction is skipped. Timestamps in the future",
+        "are reduced to now + 65,535s.",
+        "",
+        "`limit` determines the maximum number of orders from the book to fill,",
+        "and can be used to limit CU spent. When the limit is reached, processing",
+        "stops and the instruction succeeds."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -3250,6 +3357,12 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "placeTakeOrder",
+      "docs": [
+        "Place an order that shall take existing liquidity off of the book, not",
+        "add a new order off the book.",
+        "",
+        "This type of order allows for instant token settlement for the taker."
+      ],
       "accounts": [
         {
           "name": "owner",
@@ -3356,6 +3469,31 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "consumeEvents",
+      "docs": [
+        "Process up to `limit` [events](crate::state::AnyEvent).",
+        "",
+        "When a user places a 'take' order, they do not know beforehand which",
+        "market maker will have placed the 'make' order that they get executed",
+        "against. This prevents them from passing in a market maker's",
+        "[`OpenOrdersAccount`](crate::state::OpenOrdersAccount), which is needed",
+        "to credit/debit the relevant tokens to/from the maker. As such, Openbook",
+        "uses a 'crank' system, where `place_order` only emits events, and",
+        "`consume_events` handles token settlement.",
+        "",
+        "Currently, there are two types of events: [`FillEvent`](crate::state::FillEvent)s",
+        "and [`OutEvent`](crate::state::OutEvent)s.",
+        "",
+        "A `FillEvent` is emitted when an order is filled, and it is handled by",
+        "debiting whatever the taker is selling from the taker and crediting",
+        "it to the maker, and debiting whatever the taker is buying from the",
+        "maker and crediting it to the taker. Note that *no tokens are moved*,",
+        "these are just debits and credits to each party's [`Position`](crate::state::Position).",
+        "",
+        "An `OutEvent` is emitted when a limit order needs to be removed from",
+        "the book during a `place_order` invocation, and it is handled by",
+        "crediting whatever the maker would have sold (quote token in a bid,",
+        "base token in an ask) back to the maker."
+      ],
       "accounts": [
         {
           "name": "market",
@@ -3377,6 +3515,12 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "cancelOrder",
+      "docs": [
+        "Cancel an order by its `order_id`.",
+        "",
+        "Note that this doesn't emit an [`OutEvent`](crate::state::OutEvent) because a",
+        "maker knows that they will be passing in their own [`OpenOrdersAccount`](crate::state::OpenOrdersAccount)."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -3413,6 +3557,12 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "cancelOrderByClientOrderId",
+      "docs": [
+        "Cancel an order by its `client_order_id`.",
+        "",
+        "Note that this doesn't emit an [`OutEvent`](crate::state::OutEvent) because a",
+        "maker knows that they will be passing in their own [`OpenOrdersAccount`](crate::state::OpenOrdersAccount)."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -3449,6 +3599,9 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "cancelAllOrders",
+      "docs": [
+        "Cancel up to `limit` orders."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -3485,6 +3638,9 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "cancelAllOrdersBySide",
+      "docs": [
+        "Cancel up to `limit` orders on a single side of the book."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -3529,6 +3685,13 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "deposit",
+      "docs": [
+        "Desposit a certain amount of `base_amount_lots` and `quote_amount_lots`",
+        "into one's [`Position`](crate::state::Position).",
+        "",
+        "Makers might wish to `deposit`, rather than have actual tokens moved for",
+        "each trade, in order to reduce CUs."
+      ],
       "accounts": [
         {
           "name": "owner",
@@ -3589,6 +3752,9 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "settleFunds",
+      "docs": [
+        "Withdraw any available tokens."
+      ],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -3635,6 +3801,9 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "sweepFees",
+      "docs": [
+        "Sweep fees, as a [`Market`](crate::state::Market)'s admin."
+      ],
       "accounts": [
         {
           "name": "market",
@@ -3666,6 +3835,9 @@ export const IDL: OpenbookV2 = {
     },
     {
       "name": "closeMarket",
+      "docs": [
+        "Close a [`Market`](crate::state::Market)."
+      ],
       "accounts": [
         {
           "name": "admin",
