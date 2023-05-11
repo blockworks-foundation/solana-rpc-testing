@@ -3,8 +3,6 @@ name = "solana-rpc-testing"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 serde = { version = "1.0.160", features = ["derive"] }
 serde_json = "1.0.96"
@@ -20,7 +18,6 @@ log = "0.4.17"
 clap = { version = "4.2.4", features = ["derive"] }
 dashmap = "5.4.0"
 const_env = "0.1.2"
-tracing-subscriber = "0.3.16"
 chrono = "0.4.24"
 lazy_static = "1.4.0"
 rand = "0.8.5"
@@ -29,3 +26,6 @@ async-trait = "0.1.68"
 
 solana-sdk = "1.15.2"
 solana-rpc-client = "1.15.2"
+derive_more = "0.99.17"
+pretty_env_logger = "0.4.0"
+tracing-subscriber = "0.3.17"

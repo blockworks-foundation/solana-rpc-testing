@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 
-use crate::{cli::Args, config::Config, metrics::Metrics};
+use crate::{cli::Args, config::Config};
 
 #[async_trait]
 pub trait TestingTask: Send + Sync {
-    async fn test(&self, args: Args, config: Config) -> anyhow::Result<Metrics>;
+    async fn test(&self, args: Args, config: Config) -> anyhow::Result<()>;
     fn get_name(&self) -> &'static str;
 }
 
@@ -22,16 +22,17 @@ impl TestRegistry {
         let tasks = self.tests.into_iter().map(|test| {
             let args = args.clone();
             let config = config.clone();
+            let name = test.get_name();
 
             tokio::spawn(async move {
-                log::info!("test {}", test.get_name());
+                log::info!("test {name}");
 
                 match test.test(args, config).await {
                     Ok(_) => {
-                        println!("test {} passed", test.get_name());
+                        log::info!("test {name} passed");
                     }
                     Err(e) => {
-                        println!("test {} failed with error {}", test.get_name(), e);
+                        log::info!("test {} failed with error {name}", e);
                     }
                 }
             })

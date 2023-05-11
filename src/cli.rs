@@ -36,7 +36,10 @@ pub struct Args {
     pub rpc_addr: String,
 
     #[arg(short = 'd', long, default_value_t = 60)]
-    pub duration_in_seconds: usize,
+    pub duration_in_seconds: u64,
+
+    #[arg(short = 't', long, default_value_t = 4)]
+    pub threads: u64,
 }
 
 impl Args {
@@ -64,7 +67,7 @@ impl Args {
 
     #[inline]
     pub fn get_duration_to_run_test(&self) -> Duration {
-        Duration::from_secs(self.duration_in_seconds as u64)
+        Duration::from_secs(self.duration_in_seconds)
     }
 
     #[inline]
