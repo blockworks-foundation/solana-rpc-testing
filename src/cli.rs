@@ -2,18 +2,19 @@ use std::{sync::Arc, time::Duration};
 
 use clap::{command, Parser};
 use futures::StreamExt;
-use log::Log;
-use solana_client::{nonblocking::pubsub_client::PubsubClient, rpc_config::RpcTransactionLogsConfig};
+use solana_client::{
+    nonblocking::pubsub_client::PubsubClient, rpc_config::RpcTransactionLogsConfig,
+};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use solana_sdk::hash::Hash;
 use tokio::sync::RwLock;
-use solana_sdk::{hash::Hash, commitment_config::{CommitmentConfig, CommitmentLevel}};
 
 use crate::{
+    openbook::simulate_place_orders::SimulateOpenbookV2PlaceOrder,
     solana_runtime::{
         accounts_fetching::AccountsFetchingTests, get_block::GetBlockTest, get_slot::GetSlotTest,
         send_and_get_status_memo::SendAndConfrimTesting,
     },
-    openbook::simulate_place_orders::SimulateOpenbookV2PlaceOrder,
     test_registry::TestRegistry,
 };
 
@@ -63,27 +64,26 @@ impl Args {
             let rpc_ws_addr = self.rpc_ws_addr.clone();
             tokio::spawn(async move {
                 let pubsub_client = PubsubClient::new(&rpc_ws_addr).await.unwrap();
-                let res = pubsub_client.logs_subscribe(solana_client::rpc_config::RpcTransactionLogsFilter::All, RpcTransactionLogsConfig{
-                    commitment: None
-                }).await;
+                let res = pubsub_client
+                    .logs_subscribe(
+                        solana_client::rpc_config::RpcTransactionLogsFilter::All,
+                        RpcTransactionLogsConfig { commitment: None },
+                    )
+                    .await;
                 match res {
-                    Ok(( mut stream, _)) => {
-                        loop {
-                            let log = stream.next().await;
-                            match log {
-                                Some(log) => {
-                                    for log_s in log.value.logs {
-                                        println!("{}", log_s);
-                                    }
-                                },
-                                None => {
-
+                    Ok((mut stream, _)) => loop {
+                        let log = stream.next().await;
+                        match log {
+                            Some(log) => {
+                                for log_s in log.value.logs {
+                                    println!("{}", log_s);
                                 }
                             }
+                            None => {}
                         }
                     },
                     Err(e) => {
-                        println!("error subscribing to the logs {}",e);
+                        println!("error subscribing to the logs {}", e);
                     }
                 }
             });
@@ -96,7 +96,9 @@ impl Args {
         }
 
         if self.send_and_confirm_transaction || self.test_all {
-            test_registry.register(Box::new(SendAndConfrimTesting{block_hash: block_hash.clone()}));
+            test_registry.register(Box::new(SendAndConfrimTesting {
+                block_hash: block_hash.clone(),
+            }));
         }
 
         if self.get_slot || self.test_all {
@@ -108,7 +110,7 @@ impl Args {
         }
 
         if self.simulate_openbook_v2 || self.test_all {
-            test_registry.register(Box::new(SimulateOpenbookV2PlaceOrder{block_hash} ));
+            test_registry.register(Box::new(SimulateOpenbookV2PlaceOrder { block_hash }));
         }
 
         test_registry

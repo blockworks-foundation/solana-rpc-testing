@@ -27,7 +27,7 @@ struct Metric {
 }
 
 pub struct SendAndConfrimTesting {
-    pub block_hash: Arc<RwLock<Hash>>
+    pub block_hash: Arc<RwLock<Hash>>,
 }
 
 fn create_memo_tx(msg: &[u8], payer: &Keypair, blockhash: Hash) -> Transaction {

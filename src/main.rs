@@ -12,8 +12,8 @@ use anyhow::{bail, Context};
 use clap::Parser;
 use cli::Args;
 use config::Config;
-use tokio::sync::RwLock;
 use solana_sdk::hash::Hash;
+use tokio::sync::RwLock;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 async fn main() -> anyhow::Result<()> {

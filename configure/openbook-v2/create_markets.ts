@@ -56,7 +56,7 @@ export async function createMarket(program:Program<OpenbookV2>, anchorProvider: 
                 confFilter: 0,
                 maxStalenessSlots: 100,
         },
-        new BN(1000), new BN(1000), 0, 0, 0
+        new BN(1), new BN(1), 0, 0, 0
     ).accounts(
         {
             admin,

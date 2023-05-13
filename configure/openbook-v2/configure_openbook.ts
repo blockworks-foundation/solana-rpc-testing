@@ -79,7 +79,7 @@ export class OpenbookConfigurator {
             await this.program.methods.placeOrder(
                 side,
                 new BN(1000-1-i),
-                new BN(10000),
+                new BN(10),
                 new BN(1000000),
                 new BN(i),
                 placeOrder,
@@ -112,7 +112,7 @@ export class OpenbookConfigurator {
                 new BN(1000+1+i),
                 new BN(10000),
                 new BN(1000000),
-                new BN(i),
+                new BN(i+nbOrders+1),
                 placeOrder,
                 false,
                 U64_MAX_BN,
@@ -174,6 +174,21 @@ export class OpenbookConfigurator {
         argument_sizes, 
     };
 
-    return [placeOrderCommand]
+    let consumeEvents = await this.program.methods.consumeEvents(
+        new BN(0),
+    ).accounts(
+        {
+            eventQueue: PublicKey.default,
+            market: PublicKey.default,
+        }
+    ).instruction();
+
+    let consumeEventsCommand : Command = {
+        instruction: Array.from(consumeEvents.data),
+        name: "consumeEvents",
+        argument_sizes: [8, 1]
+    }
+
+    return [placeOrderCommand, consumeEventsCommand]
   }
 }

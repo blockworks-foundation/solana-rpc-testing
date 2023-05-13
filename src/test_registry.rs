@@ -1,5 +1,5 @@
-use async_trait::async_trait;
 use crate::{cli::Args, config::Config};
+use async_trait::async_trait;
 
 #[async_trait]
 pub trait TestingTask: Send + Sync {
@@ -18,7 +18,6 @@ impl TestRegistry {
     }
 
     pub async fn start_testing(self, args: Args, config: Config) {
-        
         let tasks = self.tests.into_iter().map(|test| {
             let args = args.clone();
             let config = config.clone();
