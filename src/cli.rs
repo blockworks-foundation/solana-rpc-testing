@@ -1,13 +1,19 @@
 use std::{sync::Arc, time::Duration};
 
 use clap::{command, Parser};
+use futures::StreamExt;
+use log::Log;
+use solana_client::{nonblocking::pubsub_client::PubsubClient, rpc_config::RpcTransactionLogsConfig};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+use tokio::sync::RwLock;
+use solana_sdk::{hash::Hash, commitment_config::{CommitmentConfig, CommitmentLevel}};
 
 use crate::{
     solana_runtime::{
         accounts_fetching::AccountsFetchingTests, get_block::GetBlockTest, get_slot::GetSlotTest,
         send_and_get_status_memo::SendAndConfrimTesting,
     },
+    openbook::simulate_place_orders::SimulateOpenbookV2PlaceOrder,
     test_registry::TestRegistry,
 };
 
@@ -29,21 +35,60 @@ pub struct Args {
     #[arg(long)]
     pub get_block: bool,
 
+    #[arg(long)]
+    pub simulate_openbook_v2: bool,
+
     #[arg(short = 'a', long)]
     pub test_all: bool,
 
     #[arg(short = 'r', long, default_value_t = String::from("http://127.0.0.1:8899"))]
     pub rpc_addr: String,
 
+    #[arg(short = 'w', long, default_value_t = String::from("ws://127.0.0.1:8900"))]
+    pub rpc_ws_addr: String,
+
     #[arg(short = 'd', long, default_value_t = 60)]
     pub duration_in_seconds: u64,
 
     #[arg(short = 't', long, default_value_t = 4)]
     pub threads: u64,
+
+    #[arg(short = 'p', long)]
+    pub print_logs: bool,
 }
 
 impl Args {
-    pub fn generate_test_registry(&self) -> TestRegistry {
+    pub fn generate_test_registry(&self, block_hash: Arc<RwLock<Hash>>) -> TestRegistry {
+        if self.print_logs {
+            let rpc_ws_addr = self.rpc_ws_addr.clone();
+            tokio::spawn(async move {
+                let pubsub_client = PubsubClient::new(&rpc_ws_addr).await.unwrap();
+                let res = pubsub_client.logs_subscribe(solana_client::rpc_config::RpcTransactionLogsFilter::All, RpcTransactionLogsConfig{
+                    commitment: None
+                }).await;
+                match res {
+                    Ok(( mut stream, _)) => {
+                        loop {
+                            let log = stream.next().await;
+                            match log {
+                                Some(log) => {
+                                    for log_s in log.value.logs {
+                                        println!("{}", log_s);
+                                    }
+                                },
+                                None => {
+
+                                }
+                            }
+                        }
+                    },
+                    Err(e) => {
+                        println!("error subscribing to the logs {}",e);
+                    }
+                }
+            });
+        }
+
         let mut test_registry = TestRegistry::default();
 
         if self.accounts_fetching || self.test_all {
@@ -51,7 +96,7 @@ impl Args {
         }
 
         if self.send_and_confirm_transaction || self.test_all {
-            test_registry.register(Box::new(SendAndConfrimTesting));
+            test_registry.register(Box::new(SendAndConfrimTesting{block_hash: block_hash.clone()}));
         }
 
         if self.get_slot || self.test_all {
@@ -60,6 +105,10 @@ impl Args {
 
         if self.get_block || self.test_all {
             test_registry.register(Box::new(GetBlockTest));
+        }
+
+        if self.simulate_openbook_v2 || self.test_all {
+            test_registry.register(Box::new(SimulateOpenbookV2PlaceOrder{block_hash} ));
         }
 
         test_registry

@@ -21,8 +21,8 @@ impl TestingTask for GetBlockTest {
         Ok(())
     }
 
-    fn get_name(&self) -> &'static str {
-        "GetBlockTest"
+    fn get_name(&self) -> String {
+        "GetBlockTest".to_string()
     }
 }
 
@@ -39,7 +39,7 @@ impl BenchFn for GetBlockBench {
     }
 
     async fn bench_fn(&mut self, rpc_client: Arc<RpcClient>) -> anyhow::Result<()> {
-      //  self.slot += 1;
+        //  self.slot += 1;
         rpc_client.get_block(self.slot).await?;
         Ok(())
     }

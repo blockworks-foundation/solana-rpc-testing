@@ -45,7 +45,11 @@ impl Bencher {
             })
         });
 
-        let avg_metric = futures::future::try_join_all(futs).await?.into_iter().sum::<Metric>() / args.threads;
+        let avg_metric = futures::future::try_join_all(futs)
+            .await?
+            .into_iter()
+            .sum::<Metric>()
+            / args.threads;
 
         Ok(avg_metric)
     }

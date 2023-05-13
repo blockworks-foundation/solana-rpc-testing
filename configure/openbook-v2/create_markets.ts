@@ -22,12 +22,7 @@ export interface Market {
     market_index: number,
 }
 
-export async function createMarket(anchorProvider: TestProvider, mintUtils: MintUtils, adminKp: Keypair, openbookProgramId: PublicKey, baseMint: PublicKey, quoteMint: PublicKey, index: number): Promise<Market> {
-    let program = new Program<OpenbookV2>(
-        IDL as OpenbookV2,
-        openbookProgramId,
-        anchorProvider,
-    );
+export async function createMarket(program:Program<OpenbookV2>, anchorProvider: TestProvider, mintUtils: MintUtils, adminKp: Keypair, openbookProgramId: PublicKey, baseMint: PublicKey, quoteMint: PublicKey, index: number): Promise<Market> {
     let [oracleId, _tmp] = PublicKey.findProgramAddressSync([Buffer.from("StubOracle"), baseMint.toBytes()], openbookProgramId)
     const admin:PublicKey = adminKp.publicKey;
 

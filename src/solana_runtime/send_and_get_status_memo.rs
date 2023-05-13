@@ -26,7 +26,9 @@ struct Metric {
     pub number_of_unconfirmed_txs: usize,
 }
 
-pub struct SendAndConfrimTesting;
+pub struct SendAndConfrimTesting {
+    pub block_hash: Arc<RwLock<Hash>>
+}
 
 fn create_memo_tx(msg: &[u8], payer: &Keypair, blockhash: Hash) -> Transaction {
     let memo = Pubkey::from_str(MEMO_PROGRAM_ID).unwrap();
@@ -117,26 +119,6 @@ impl TestingTask for SendAndConfrimTesting {
     ) -> anyhow::Result<()> {
         println!("started sending and confirming memo transactions");
         let rpc_client = Arc::new(RpcClient::new(args.rpc_addr.clone()));
-        let block_hash: Arc<RwLock<Hash>> = Arc::new(RwLock::new(Hash::default()));
-
-        // block hash updater task
-        {
-            let block_hash = block_hash.clone();
-            let rpc_client = rpc_client.clone();
-            tokio::spawn(async move {
-                loop {
-                    let bh = rpc_client.get_latest_blockhash().await;
-                    match bh {
-                        Ok(bh) => {
-                            let mut lock = block_hash.write().await;
-                            *lock = bh;
-                        }
-                        Err(e) => println!("blockhash update error {}", e),
-                    }
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
-            });
-        }
 
         let mut run_interval_ms = tokio::time::interval(Duration::from_secs(1));
         let nb_runs = args.duration_in_seconds;
@@ -146,6 +128,7 @@ impl TestingTask for SendAndConfrimTesting {
             let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
             let payer = payers.choose(&mut rng).unwrap();
             let payer = Keypair::from_bytes(payer.to_bytes().as_slice()).unwrap();
+            let block_hash = self.block_hash.clone();
             tasks.push(tokio::spawn(send_and_confirm_transactions(
                 rpc_client.clone(),
                 NB_MEMO_TRANSACTIONS_SENT_PER_SECOND,
@@ -173,7 +156,7 @@ impl TestingTask for SendAndConfrimTesting {
         Ok(())
     }
 
-    fn get_name(&self) -> &'static str {
-        "Send and confirm memo transaction"
+    fn get_name(&self) -> String {
+        "Send and confirm memo transaction".to_string()
     }
 }

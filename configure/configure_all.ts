@@ -8,7 +8,7 @@ import { getKeypairFromFile } from './common_utils';
 import { deploy_programs } from './deploy_programs';
 import { User, createUser, mintUser } from './general/create_users';
 import { configure_accounts } from './general/accounts';
-import { OutputFile } from './output_file';
+import { Command, OutputFile } from './output_file';
 import { MintUtils } from './general/mint_utils';
 import { OpenbookConfigurator } from './openbook-v2/configure_openbook';
 
@@ -142,9 +142,11 @@ async function configure(
     let programOutputData = programs.map(x => {
 
         let kp = getKeypairFromFile(x.programKeyPath);
+        let emptyCommands : Command[] = [];
         return {
             name: x.name,
-            program_id: kp.publicKey
+            program_id: kp.publicKey,
+            commands: emptyCommands,
         }
     })
 
@@ -167,18 +169,19 @@ async function configure(
     let openbookProgramId = programOutputData[index].program_id;
     let openbookConfigurator = new OpenbookConfigurator(connection, authority, mintUtils, openbookProgramId);
     let markets = await openbookConfigurator.configureOpenbookV2(mints);
+    programOutputData[index].commands = await openbookConfigurator.getCommands();
     console.log("Finished configuring openbook")
 
     console.log("Creating users");
     let users = await Promise.all(Array.from(Array(nbPayers).keys()).map(_ => createUser(connection, authority, balancePerPayer)));
     let tokenAccounts = await Promise.all(users.map(
         /// user is richer than bill gates, but not as rich as certain world leaders
-        user => mintUser(connection, authority, mints, mintUtils, user.publicKey, 100_000_000_000)
+        async(user) => await mintUser(connection, authority, mints, mintUtils, user.publicKey, 100_000_000_000_000_000)
     ))
 
     let userOpenOrders = await Promise.all(users.map(
         /// user is crazy betting all his money in crypto market
-        user => openbookConfigurator.configureMarketForUser(user, markets, 100_000_000_000)
+        async(user) => await openbookConfigurator.configureMarketForUser(user, markets)
     ))
 
     let userData: User [] = users.map((user, i) => {
@@ -190,6 +193,14 @@ async function configure(
     })
     
     console.log("Users created");
+
+    console.log("Filling up orderbook");
+    await Promise.all( userData.map( async(user, i) => {
+        for (const market of markets) {
+            await openbookConfigurator.fillOrderBook(user, users[i], market, 32);
+        }
+    }) )
+    console.log("Orderbook filled");
 
     console.log("Creating accounts")
     let accounts = await configure_accounts(connection, authority, numberOfAccountsToBeCreated, programIds);

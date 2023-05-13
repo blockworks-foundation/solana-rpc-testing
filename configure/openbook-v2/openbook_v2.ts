@@ -1553,22 +1553,6 @@ export type OpenbookV2 = {
         "kind": "struct",
         "fields": [
           {
-            "name": "basePositionLots",
-            "docs": [
-              "Currenlty not being used"
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "quotePositionNative",
-            "docs": [
-              "Currenlty not being used"
-            ],
-            "type": {
-              "defined": "I80F48"
-            }
-          },
-          {
             "name": "quoteRunningNative",
             "docs": [
               "Tracks what the position is to calculate average entry & break even price"
@@ -1586,20 +1570,6 @@ export type OpenbookV2 = {
             "name": "asksBaseLots",
             "docs": [
               "Base lots in open asks"
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "takerBaseLots",
-            "docs": [
-              "Amount of base lots on the EventQueue waiting to be processed"
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "takerQuoteLots",
-            "docs": [
-              "Amount of quote lots on the EventQueue waiting to be processed"
             ],
             "type": "i64"
           },
@@ -4512,22 +4482,6 @@ export const IDL: OpenbookV2 = {
         "kind": "struct",
         "fields": [
           {
-            "name": "basePositionLots",
-            "docs": [
-              "Currenlty not being used"
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "quotePositionNative",
-            "docs": [
-              "Currenlty not being used"
-            ],
-            "type": {
-              "defined": "I80F48"
-            }
-          },
-          {
             "name": "quoteRunningNative",
             "docs": [
               "Tracks what the position is to calculate average entry & break even price"
@@ -4545,20 +4499,6 @@ export const IDL: OpenbookV2 = {
             "name": "asksBaseLots",
             "docs": [
               "Base lots in open asks"
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "takerBaseLots",
-            "docs": [
-              "Amount of base lots on the EventQueue waiting to be processed"
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "takerQuoteLots",
-            "docs": [
-              "Amount of quote lots on the EventQueue waiting to be processed"
             ],
             "type": "i64"
           },
