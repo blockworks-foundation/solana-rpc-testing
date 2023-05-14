@@ -1,6 +1,5 @@
 use crate::test_registry::TestingTask;
 use async_trait::async_trait;
-use rand::{rngs::StdRng, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use solana_sdk::hash::Hash;
 use solana_sdk::{
@@ -88,21 +87,20 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
 
                 let task = tokio::spawn(async move {
                     let start = Instant::now();
-                    let mut rng = StdRng::from_seed(user.get_keypair().pubkey().to_bytes());
 
                     let mut place_order_ix = place_order_cmd.instruction;
                     let rpc_client = args.get_rpc_client();
+                    let mut side = false;
+                    let mut price_diff: i64 = 1;
+                    let mut max_base_lots = 1;
                     while start.elapsed().as_secs() < args.duration_in_seconds {
-                        let side = rng.gen::<bool>(); // 0 for bid and 1 for ask
                         let order_type: u8 = 0;
-                        let price_diff = (rng.gen::<u8>() % 32) as i64;
 
                         let price_lots: i64 = if side {
                             1000 - price_diff
                         } else {
                             1000 + price_diff
                         };
-                        let max_base_lots: i64 = rng.gen_range(0..10);
                         let place_order_params = PlaceOrderArgs {
                             client_order_id: 100,
                             side: side as u8,
@@ -164,6 +162,11 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
                         } else {
                             successful_orders_count.fetch_add(1, Ordering::Relaxed);
                         }
+
+                        // update side and price diff
+                        side = !side;
+                        price_diff = price_diff % 6 + 1;
+                        max_base_lots = max_base_lots % 10 + 1;
                     }
                 });
                 tasks.push(task);
