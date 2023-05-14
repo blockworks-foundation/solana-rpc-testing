@@ -1,6 +1,8 @@
 use crate::test_registry::TestingTask;
+use crate::utils::noop;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use solana_sdk::compute_budget;
 use solana_sdk::hash::Hash;
 use solana_sdk::{
     instruction::{AccountMeta, Instruction},
@@ -147,9 +149,18 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
                         );
 
                         let recent_blockhash = *block_hash.read().await;
+
+                        // to generate new signature each time
+                        let noop_ix = noop::timestamp();
+                        // to have higher compute budget limit
+                        let cu_limits_ix =
+                            compute_budget::ComputeBudgetInstruction::set_compute_unit_limit(
+                                1000000,
+                            );
+
                         let transaction = Transaction::new(
                             &[&user.get_keypair()],
-                            Message::new(&[ix], Some(&user.pubkey())),
+                            Message::new(&[noop_ix, cu_limits_ix, ix], Some(&user.pubkey())),
                             recent_blockhash,
                         );
                         let signature = transaction.signatures[0];

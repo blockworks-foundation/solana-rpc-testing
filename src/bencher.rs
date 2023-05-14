@@ -18,7 +18,6 @@ pub struct Bencher;
 
 impl Bencher {
     pub async fn bench<B: BenchFn>(args: Args) -> anyhow::Result<Metric> {
-
         let futs = (0..args.threads).map(|_| {
             let rpc_client = args.get_rpc_client();
             let duration = args.get_duration_to_run_test();

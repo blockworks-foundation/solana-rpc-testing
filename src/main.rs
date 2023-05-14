@@ -5,6 +5,7 @@ mod metrics;
 mod openbook;
 mod solana_runtime;
 mod test_registry;
+mod utils;
 
 use std::{sync::Arc, time::Duration};
 

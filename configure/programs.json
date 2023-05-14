@@ -10,5 +10,11 @@
     "programPath": "configure/programs/openbook_v2.so",
     "programKeyPath": "configure/programs/openbook_v2-keypair.json",
     "idl": ""
+  },
+  {
+    "noop": "noop",
+    "programPath": "configure/programs/spl_noop.so",
+    "programKeyPath": "configure/programs/spl_noop.json",
+    "idl": ""
   }
 ]
