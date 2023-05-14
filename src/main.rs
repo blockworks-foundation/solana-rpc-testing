@@ -1,7 +1,6 @@
 pub mod bencher;
 mod cli;
 mod config;
-mod metrics;
 mod openbook;
 mod solana_runtime;
 mod test_registry;

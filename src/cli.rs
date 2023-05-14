@@ -51,7 +51,7 @@ pub struct Args {
     #[arg(short = 'd', long, default_value_t = 60)]
     pub duration_in_seconds: u64,
 
-    #[arg(short = 't', long, default_value_t = 4)]
+    #[arg(short = 't', long, default_value_t = 32)]
     pub threads: u64,
 
     #[arg(short = 'p', long)]

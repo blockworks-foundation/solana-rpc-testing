@@ -3595,6 +3595,7 @@ dependencies = [
  "dashmap",
  "derive_more",
  "futures",
+ "itertools",
  "lazy_static",
  "log",
  "pretty_env_logger",
