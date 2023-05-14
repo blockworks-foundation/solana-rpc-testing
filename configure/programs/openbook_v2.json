@@ -640,9 +640,7 @@
     },
     {
       "name": "cancelAllOrders",
-      "docs": [
-        "Cancel up to `limit` orders."
-      ],
+      "docs": ["Cancel up to `limit` orders."],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -679,9 +677,7 @@
     },
     {
       "name": "cancelAllOrdersBySide",
-      "docs": [
-        "Cancel up to `limit` orders on a single side of the book."
-      ],
+      "docs": ["Cancel up to `limit` orders on a single side of the book."],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -793,9 +789,7 @@
     },
     {
       "name": "settleFunds",
-      "docs": [
-        "Withdraw any available tokens."
-      ],
+      "docs": ["Withdraw any available tokens."],
       "accounts": [
         {
           "name": "openOrdersAccount",
@@ -842,9 +836,7 @@
     },
     {
       "name": "sweepFees",
-      "docs": [
-        "Sweep fees, as a [`Market`](crate::state::Market)'s admin."
-      ],
+      "docs": ["Sweep fees, as a [`Market`](crate::state::Market)'s admin."],
       "accounts": [
         {
           "name": "market",
@@ -876,9 +868,7 @@
     },
     {
       "name": "closeMarket",
-      "docs": [
-        "Close a [`Market`](crate::state::Market)."
-      ],
+      "docs": ["Close a [`Market`](crate::state::Market)."],
       "accounts": [
         {
           "name": "admin",
@@ -1014,23 +1004,17 @@
         "fields": [
           {
             "name": "admin",
-            "docs": [
-              "Admin who can close this market"
-            ],
+            "docs": ["Admin who can close this market"],
             "type": "publicKey"
           },
           {
             "name": "marketIndex",
-            "docs": [
-              "Index of this market"
-            ],
+            "docs": ["Index of this market"],
             "type": "u32"
           },
           {
             "name": "bump",
-            "docs": [
-              "PDA bump"
-            ],
+            "docs": ["PDA bump"],
             "type": "u8"
           },
           {
@@ -1049,57 +1033,39 @@
           {
             "name": "padding1",
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
             "name": "name",
-            "docs": [
-              "Name. Trailing zero bytes are ignored."
-            ],
+            "docs": ["Name. Trailing zero bytes are ignored."],
             "type": {
-              "array": [
-                "u8",
-                16
-              ]
+              "array": ["u8", 16]
             }
           },
           {
             "name": "bids",
-            "docs": [
-              "Address of the BookSide account for bids"
-            ],
+            "docs": ["Address of the BookSide account for bids"],
             "type": "publicKey"
           },
           {
             "name": "asks",
-            "docs": [
-              "Address of the BookSide account for asks"
-            ],
+            "docs": ["Address of the BookSide account for asks"],
             "type": "publicKey"
           },
           {
             "name": "eventQueue",
-            "docs": [
-              "Address of the EventQueue account"
-            ],
+            "docs": ["Address of the EventQueue account"],
             "type": "publicKey"
           },
           {
             "name": "oracle",
-            "docs": [
-              "Oracle account address"
-            ],
+            "docs": ["Oracle account address"],
             "type": "publicKey"
           },
           {
             "name": "oracleConfig",
-            "docs": [
-              "Oracle configuration"
-            ],
+            "docs": ["Oracle configuration"],
             "type": {
               "defined": "OracleConfig"
             }
@@ -1137,16 +1103,12 @@
           },
           {
             "name": "seqNum",
-            "docs": [
-              "Total number of orders seen"
-            ],
+            "docs": ["Total number of orders seen"],
             "type": "u64"
           },
           {
             "name": "registrationTime",
-            "docs": [
-              "Timestamp in seconds that the market was registered at."
-            ],
+            "docs": ["Timestamp in seconds that the market was registered at."],
             "type": "u64"
           },
           {
@@ -1161,45 +1123,34 @@
           },
           {
             "name": "takerFee",
-            "docs": [
-              "Fee for taker orders, may not be negative."
-            ],
+            "docs": ["Fee for taker orders, may not be negative."],
             "type": {
               "defined": "I80F48"
             }
           },
           {
             "name": "feesAccrued",
-            "docs": [
-              "Fees accrued in native quote currency"
-            ],
+            "docs": ["Fees accrued in native quote currency"],
             "type": {
               "defined": "I80F48"
             }
           },
           {
             "name": "feesSettled",
-            "docs": [
-              "Fees settled in native quote currency"
-            ],
+            "docs": ["Fees settled in native quote currency"],
             "type": {
               "defined": "I80F48"
             }
           },
           {
             "name": "feePenalty",
-            "docs": [
-              "Fee (in quote native) to charge for ioc orders"
-            ],
+            "docs": ["Fee (in quote native) to charge for ioc orders"],
             "type": "f32"
           },
           {
             "name": "padding2",
             "type": {
-              "array": [
-                "u8",
-                4
-              ]
+              "array": ["u8", 4]
             }
           },
           {
@@ -1249,10 +1200,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                1888
-              ]
+              "array": ["u8", 1888]
             }
           }
         ]
@@ -1270,10 +1218,7 @@
           {
             "name": "name",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
@@ -1291,10 +1236,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                3
-              ]
+              "array": ["u8", 3]
             }
           },
           {
@@ -1307,9 +1249,7 @@
           },
           {
             "name": "buybackFeesAccruedPrevious",
-            "docs": [
-              "Fees buyback amount from the previous expiry interval."
-            ],
+            "docs": ["Fees buyback amount from the previous expiry interval."],
             "type": "u64"
           },
           {
@@ -1328,10 +1268,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                208
-              ]
+              "array": ["u8", 208]
             }
           },
           {
@@ -1341,10 +1278,7 @@
           {
             "name": "padding3",
             "type": {
-              "array": [
-                "u8",
-                7
-              ]
+              "array": ["u8", 7]
             }
           },
           {
@@ -1388,10 +1322,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                128
-              ]
+              "array": ["u8", 128]
             }
           }
         ]
@@ -1427,10 +1358,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                256
-              ]
+              "array": ["u8", 256]
             }
           },
           {
@@ -1467,10 +1395,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                64
-              ]
+              "array": ["u8", 64]
             }
           }
         ]
@@ -1490,10 +1415,7 @@
           {
             "name": "name",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
@@ -1511,10 +1433,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                3
-              ]
+              "array": ["u8", 3]
             }
           },
           {
@@ -1538,10 +1457,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                208
-              ]
+              "array": ["u8", 208]
             }
           }
         ]
@@ -1561,16 +1477,12 @@
           },
           {
             "name": "bidsBaseLots",
-            "docs": [
-              "Base lots in open bids"
-            ],
+            "docs": ["Base lots in open bids"],
             "type": "i64"
           },
           {
             "name": "asksBaseLots",
-            "docs": [
-              "Base lots in open asks"
-            ],
+            "docs": ["Base lots in open asks"],
             "type": "i64"
           },
           {
@@ -1618,10 +1530,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                88
-              ]
+              "array": ["u8", 88]
             }
           }
         ]
@@ -1639,10 +1548,7 @@
           {
             "name": "padding1",
             "type": {
-              "array": [
-                "u8",
-                7
-              ]
+              "array": ["u8", 7]
             }
           },
           {
@@ -1660,10 +1566,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                64
-              ]
+              "array": ["u8", 64]
             }
           }
         ]
@@ -1687,10 +1590,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                72
-              ]
+              "array": ["u8", 72]
             }
           }
         ]
@@ -1733,10 +1633,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                3
-              ]
+              "array": ["u8", 3]
             }
           },
           {
@@ -1749,21 +1646,14 @@
           },
           {
             "name": "key",
-            "docs": [
-              "only the top `prefix_len` bits of `key` are relevant"
-            ],
+            "docs": ["only the top `prefix_len` bits of `key` are relevant"],
             "type": "u128"
           },
           {
             "name": "children",
-            "docs": [
-              "indexes into `BookSide::nodes`"
-            ],
+            "docs": ["indexes into `BookSide::nodes`"],
             "type": {
-              "array": [
-                "u32",
-                2
-              ]
+              "array": ["u32", 2]
             }
           },
           {
@@ -1775,19 +1665,13 @@
               "iterate through the whole bookside."
             ],
             "type": {
-              "array": [
-                "u64",
-                2
-              ]
+              "array": ["u64", 2]
             }
           },
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                72
-              ]
+              "array": ["u8", 72]
             }
           }
         ]
@@ -1795,24 +1679,18 @@
     },
     {
       "name": "LeafNode",
-      "docs": [
-        "LeafNodes represent an order in the binary tree"
-      ],
+      "docs": ["LeafNodes represent an order in the binary tree"],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "tag",
-            "docs": [
-              "NodeTag"
-            ],
+            "docs": ["NodeTag"],
             "type": "u8"
           },
           {
             "name": "ownerSlot",
-            "docs": [
-              "Index into the owning OpenOrdersAccount's OpenOrders"
-            ],
+            "docs": ["Index into the owning OpenOrdersAccount's OpenOrders"],
             "type": "u8"
           },
           {
@@ -1825,10 +1703,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -1842,38 +1717,27 @@
           {
             "name": "padding2",
             "type": {
-              "array": [
-                "u8",
-                2
-              ]
+              "array": ["u8", 2]
             }
           },
           {
             "name": "key",
-            "docs": [
-              "The binary tree key, see new_node_key()"
-            ],
+            "docs": ["The binary tree key, see new_node_key()"],
             "type": "u128"
           },
           {
             "name": "owner",
-            "docs": [
-              "Address of the owning OpenOrdersAccount"
-            ],
+            "docs": ["Address of the owning OpenOrdersAccount"],
             "type": "publicKey"
           },
           {
             "name": "quantity",
-            "docs": [
-              "Number of base lots to buy or sell, always >=1"
-            ],
+            "docs": ["Number of base lots to buy or sell, always >=1"],
             "type": "i64"
           },
           {
             "name": "timestamp",
-            "docs": [
-              "The time the order was placed"
-            ],
+            "docs": ["The time the order was placed"],
             "type": "u64"
           },
           {
@@ -1888,18 +1752,13 @@
           },
           {
             "name": "clientOrderId",
-            "docs": [
-              "User defined id for this order, used in FillEvents"
-            ],
+            "docs": ["User defined id for this order, used in FillEvents"],
             "type": "u64"
           },
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           }
         ]
@@ -1917,10 +1776,7 @@
           {
             "name": "data",
             "type": {
-              "array": [
-                "u8",
-                119
-              ]
+              "array": ["u8", 119]
             }
           }
         ]
@@ -1959,10 +1815,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                3
-              ]
+              "array": ["u8", 3]
             }
           },
           {
@@ -1980,10 +1833,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                512
-              ]
+              "array": ["u8", 512]
             }
           },
           {
@@ -2032,10 +1882,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                199
-              ]
+              "array": ["u8", 199]
             }
           }
         ]
@@ -2065,10 +1912,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                4
-              ]
+              "array": ["u8", 4]
             }
           },
           {
@@ -2086,10 +1930,7 @@
           {
             "name": "padding2",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
@@ -2103,10 +1944,7 @@
           {
             "name": "padding3",
             "type": {
-              "array": [
-                "u8",
-                16
-              ]
+              "array": ["u8", 16]
             }
           },
           {
@@ -2116,10 +1954,7 @@
           {
             "name": "padding4",
             "type": {
-              "array": [
-                "u8",
-                16
-              ]
+              "array": ["u8", 16]
             }
           },
           {
@@ -2137,10 +1972,7 @@
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                8
-              ]
+              "array": ["u8", 8]
             }
           }
         ]
@@ -2166,10 +1998,7 @@
           {
             "name": "padding0",
             "type": {
-              "array": [
-                "u8",
-                5
-              ]
+              "array": ["u8", 5]
             }
           },
           {
@@ -2191,10 +2020,7 @@
           {
             "name": "padding1",
             "type": {
-              "array": [
-                "u8",
-                136
-              ]
+              "array": ["u8", 136]
             }
           }
         ]
@@ -2220,9 +2046,7 @@
         "fields": [
           {
             "name": "stablePrice",
-            "docs": [
-              "Current stable price to use in health"
-            ],
+            "docs": ["Current stable price to use in health"],
             "type": "f64"
           },
           {
@@ -2239,10 +2063,7 @@
               "we use the next one."
             ],
             "type": {
-              "array": [
-                "f64",
-                24
-              ]
+              "array": ["f64", 24]
             }
           },
           {
@@ -2255,16 +2076,12 @@
           },
           {
             "name": "delayAccumulatorTime",
-            "docs": [
-              "Accumulating the total time for the above average."
-            ],
+            "docs": ["Accumulating the total time for the above average."],
             "type": "u32"
           },
           {
             "name": "delayIntervalSeconds",
-            "docs": [
-              "Length of a delay_interval"
-            ],
+            "docs": ["Length of a delay_interval"],
             "type": "u32"
           },
           {
@@ -2292,19 +2109,13 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                7
-              ]
+              "array": ["u8", 7]
             }
           },
           {
             "name": "reserved",
             "type": {
-              "array": [
-                "u8",
-                48
-              ]
+              "array": ["u8", 48]
             }
           }
         ]

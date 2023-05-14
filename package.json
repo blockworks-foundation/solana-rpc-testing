@@ -4,6 +4,9 @@
   "main": "index.js",
   "repository": "https://github.com/blockworks-foundation/solana-rpc-testing.git",
   "license": "MIT",
+  "scripts": {
+    "configure": "ts-node configure/main.ts"
+  },
   "devDependencies": {
     "@types/node": "^20.1.0",
     "ts-node": "^10.9.1",

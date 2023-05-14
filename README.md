@@ -30,7 +30,7 @@ Here are arguments required by the script, all the arguments are optional:
 --authority, -a <str>           - a string [optional][default: ~/.config/solana/id.json]
 --number-of-payers, -p <number> - Number of payers used for testing [optional][default: 10]
 --payer-balance, -b <number>    - Balance of payer in SOLs [optional][default: 1 SOLs]
---output-file, -o <str>         - a string [optional][default: config.json]
+--output-file, -o <str>         - a string [optional][default: configure/config.json]
 ```
 
 Once the cluster configuration is successfully done we create a json file `config.json`
@@ -39,7 +39,7 @@ To configure cluster:
 
 ```sh
 cd configure
-ts-node configure_all.ts -a /home/user/.config/solana/id.json
+yarn configure -a ../solana_configure_local_cluster/faucet.json
 cd ..
 ```
 

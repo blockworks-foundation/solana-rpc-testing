@@ -1,14 +1,14 @@
 [
-    {
-        "name": "pyth_mock",
-        "programPath": "programs/pyth_mock.so",
-        "programKeyPath": "programs/pyth_mock.json",
-        "idl": ""
-    },
-    {
-        "name": "openbook_v2",
-        "programPath": "programs/openbook_v2.so",
-        "programKeyPath": "programs/openbook_v2-keypair.json",
-        "idl": "programs/openbook_v2.json"
-    }
+  {
+    "name": "pyth_mock",
+    "programPath": "configure/programs/pyth_mock.so",
+    "programKeyPath": "configure/programs/pyth_mock.json",
+    "idl": ""
+  },
+  {
+    "name": "openbook_v2",
+    "programPath": "configure/programs/openbook_v2.so",
+    "programKeyPath": "configure/programs/openbook_v2-keypair.json",
+    "idl": ""
+  }
 ]
