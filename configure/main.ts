@@ -20,7 +20,7 @@ import { OpenbookConfigurator } from "./openbook-v2/configure_openbook";
 
 const numberOfAccountsToBeCreated = option({
   type: number,
-  defaultValue: () => 256,
+  defaultValue: () => 100,
   long: "number-of-accounts",
 });
 
@@ -63,6 +63,14 @@ const nbMints = option({
   description: "Number of mints",
 });
 
+const nbMarkerOrderPerSide = option({
+  type: number,
+  defaultValue: () => 10,
+  long: "number-of-market-orders-per-user",
+  short: "o",
+  description: "Number of of market orders per user on each side",
+});
+
 const skipProgramDeployment = flag({
   type: boolean,
   defaultValue: () => false,
@@ -88,6 +96,7 @@ const app = command({
     balancePerPayer,
     nbMints,
     skipProgramDeployment,
+    nbMarkerOrderPerSide,
     outFile,
   },
   handler: ({
@@ -98,6 +107,7 @@ const app = command({
     balancePerPayer,
     nbMints,
     skipProgramDeployment,
+    nbMarkerOrderPerSide,
     outFile,
   }) => {
     console.log("configuring a new test instance");
@@ -109,6 +119,7 @@ const app = command({
       balancePerPayer,
       nbMints,
       skipProgramDeployment,
+      nbMarkerOrderPerSide,
       outFile
     ).then((_) => {
       console.log("configuration finished");
@@ -127,6 +138,7 @@ async function configure(
   balancePerPayer: number,
   nbMints: number,
   skipProgramDeployment: boolean,
+  nbMarkerOrderPerSide: number,
   outFile: String
 ) {
   // create connections
@@ -187,53 +199,63 @@ async function configure(
   console.log("Finished configuring openbook");
 
   console.log("Creating users");
-  let users = await Promise.all(
-    Array.from(Array(nbPayers).keys()).map((_) =>
-      createUser(connection, authority, balancePerPayer)
-    )
-  );
-  let tokenAccounts = await Promise.all(
-    users.map(
-      /// user is richer than bill gates, but not as rich as certain world leaders
-      async (user) =>
-        await mintUser(
-          connection,
-          authority,
-          mints,
-          mintUtils,
-          user.publicKey,
-          100_000_000_000_000_000
+  
+  const chunkSize = 10;
+  console.log("creating " + nbPayers + " in batches of " + chunkSize);
+  let userData : User[] = [];
+
+  for (let i = 0; i < nbPayers; i += chunkSize) {
+      let users = await Promise.all(
+        Array.from(Array(chunkSize).keys()).map((_) =>
+          createUser(connection, authority, balancePerPayer)
         )
-    )
-  );
+      );
+      let tokenAccounts = await Promise.all(
+        users.map(
+          /// user is richer than bill gates, but not as rich as certain world leaders
+          async (user) =>
+            await mintUser(
+              connection,
+              authority,
+              mints,
+              mintUtils,
+              user.publicKey,
+              100_000_000_000_000_000
+            )
+        )
+      );
 
-  let userOpenOrders = await Promise.all(
-    users.map(
-      /// user is crazy betting all his money in crypto market
-      async (user) =>
-        await openbookConfigurator.configureMarketForUser(user, markets)
-    )
-  );
+      let userOpenOrders = await Promise.all(
+        users.map(
+          /// user is crazy betting all his money in crypto market
+          async (user) =>
+            await openbookConfigurator.configureMarketForUser(user, markets)
+        )
+      );
 
-  let userData: User[] = users.map((user, i) => {
-    return {
-      secret: Array.from(user.secretKey),
-      open_orders: userOpenOrders[i],
-      token_data: tokenAccounts[i],
-    };
-  });
+      let userDataBatch = users.map((user, i) => {
+        return {
+          secret: Array.from(user.secretKey),
+          open_orders: userOpenOrders[i],
+          token_data: tokenAccounts[i],
+        };
+      });
 
-  console.log("Users created");
+      userData = userData.concat(userDataBatch);
 
-  console.log("Filling up orderbook");
-  await Promise.all(
-    userData.map(async (user, i) => {
-      for (const market of markets) {
-        await openbookConfigurator.fillOrderBook(user, users[i], market, 32);
-      }
-    })
-  );
-  console.log("Orderbook filled");
+      console.log("Users created");
+
+      console.log("Filling up orderbook");
+      await Promise.all(
+        userDataBatch.map(async (user, i) => {
+          for (const market of markets) {
+            await openbookConfigurator.fillOrderBook(user, users[i], market, nbMarkerOrderPerSide);
+          }
+        })
+      );
+      console.log("Orderbook filled");
+
+  }
 
   console.log("Creating accounts");
   let accounts = await configure_accounts(
