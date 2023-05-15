@@ -12,7 +12,7 @@
     "idl": ""
   },
   {
-    "noop": "noop",
+    "name": "noop",
     "programPath": "configure/programs/spl_noop.so",
     "programKeyPath": "configure/programs/spl_noop.json",
     "idl": ""

@@ -73,7 +73,7 @@ const skipProgramDeployment = flag({
 
 const outFile = option({
   type: string,
-  defaultValue: () => "cofigure/config.json",
+  defaultValue: () => "configure/config.json",
   long: "output-file",
   short: "o",
 });
