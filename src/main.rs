@@ -33,6 +33,11 @@ async fn main() -> anyhow::Result<()> {
         bail!("No payers");
     }
 
+    if config_json.markets.is_empty() {
+        log::error!("Config file is missing markets");
+        bail!("No markets")
+    }
+
     let rpc_client = args.get_rpc_client();
     let current_hash = rpc_client.get_latest_blockhash().await.unwrap();
     let block_hash: Arc<RwLock<Hash>> = Arc::new(RwLock::new(current_hash));

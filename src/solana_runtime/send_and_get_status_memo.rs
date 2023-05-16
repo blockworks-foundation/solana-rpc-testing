@@ -1,4 +1,4 @@
-use crate::{test_registry::TestingTask, bencher::{Benchmark, Run, Bencher}, config::Config};
+use crate::{test_registry::TestingTask, bencher::{Benchmark, Run, Bencher}};
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, prelude::Distribution, seq::SliceRandom, SeedableRng};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
@@ -36,8 +36,9 @@ impl TestingTask for SendAndConfrimTesting {
     ) -> anyhow::Result<()> {
         let instant = SendMemoTransactionsBench {
             block_hash: self.block_hash.clone(),
+            payers: config.users.iter().map(|x| Arc::new(x.get_keypair())).collect()
         };
-        let metric = Bencher::bench::<SendMemoTransactionsBench>( instant, args, config).await?;
+        let metric = Bencher::bench::<SendMemoTransactionsBench>( instant, args).await?;
         log::info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
         Ok(())
     }
@@ -50,22 +51,23 @@ impl TestingTask for SendAndConfrimTesting {
 #[derive(Clone)]
 struct SendMemoTransactionsBench {
     block_hash:  Arc<RwLock<Hash>>,
+    payers: Vec<Arc<Keypair>>,
 }
 
 #[async_trait::async_trait]
 impl Benchmark for SendMemoTransactionsBench {
 
-    async fn run(self, rpc_client: Arc<RpcClient>, duration: std::time::Duration, _: crate::cli::Args, config: Config, random_number: u64) -> anyhow::Result<crate::bencher::Run> {
+    async fn run(self, rpc_client: Arc<RpcClient>, duration: std::time::Duration, random_number: u64) -> anyhow::Result<crate::bencher::Run> {
         let mut result = Run::default();
 
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(random_number);
         let start = Instant::now();
         while start.elapsed() < duration {
             let msg: Vec<u8> = Alphanumeric.sample_iter(&mut rng).take(10).collect();
-            let payer = config.users.choose(&mut rng).unwrap();
+            let payer = self.payers.choose(&mut rng).unwrap();
 
             let blockhash = { *self.block_hash.read().await };
-                let tx = create_memo_tx(&msg, &payer.get_keypair(), blockhash);
+                let tx = create_memo_tx(&msg, &payer, blockhash);
                 match rpc_client.send_transaction(&tx).await {
                 Ok(_) => {
                     result.requests_completed += 1;

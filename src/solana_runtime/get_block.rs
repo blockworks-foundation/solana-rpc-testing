@@ -18,15 +18,15 @@ pub struct GetBlockTest;
 
 #[async_trait::async_trait]
 impl TestingTask for GetBlockTest {
-    async fn test(&self, args: Args, config: Config) -> anyhow::Result<()> {
+    async fn test(&self, args: Args, _: Config) -> anyhow::Result<()> {
         let slot =  {
             args.get_rpc_client().get_slot().await.unwrap()
         };
         let instant = GetBlockBench {
             slot
         };
-        let metric = Bencher::bench::<GetBlockBench>( instant, args, config).await?;
-        info!("{}", serde_json::to_string(&metric)?);
+        let metric = Bencher::bench::<GetBlockBench>( instant, args).await?;
+        info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
         Ok(())
     }
 
@@ -43,7 +43,7 @@ pub struct GetBlockBench {
 #[async_trait::async_trait]
 impl Benchmark for GetBlockBench {
 
-    async fn run(self, rpc_client: Arc<RpcClient>, duration: Duration, _: Args, _: Config, _: u64) -> anyhow::Result<Run> {
+    async fn run(self, rpc_client: Arc<RpcClient>, duration: Duration, _: u64) -> anyhow::Result<Run> {
         let mut result = Run::default();
 
         let start = Instant::now();

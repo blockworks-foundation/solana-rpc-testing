@@ -36,8 +36,8 @@ impl TestingTask for AccountsFetchingTests {
         let instant = GetAccountsBench { 
             accounts_list: [accounts, unknown_accounts].concat(),
         };
-        let metric = Bencher::bench::<GetAccountsBench>(instant, args, config).await?;
-        log::info!("{}", serde_json::to_string(&metric)?);
+        let metric = Bencher::bench::<GetAccountsBench>(instant, args).await?;
+        log::info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
         Ok(())
     }
 
@@ -54,7 +54,7 @@ pub struct GetAccountsBench {
 #[async_trait::async_trait]
 impl Benchmark for GetAccountsBench {
 
-    async fn run(self, rpc_client: Arc<RpcClient>, duration: std::time::Duration, _: crate::cli::Args, _: Config, random_number: u64) -> anyhow::Result<crate::bencher::Run> {
+    async fn run(self, rpc_client: Arc<RpcClient>, duration: std::time::Duration, random_number: u64) -> anyhow::Result<crate::bencher::Run> {
         let mut result = Run::default();
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(random_number);
         let number_of_fetched_accounts = NB_OF_ACCOUNTS_FETCHED_PER_TASK.min(self.accounts_list.len());

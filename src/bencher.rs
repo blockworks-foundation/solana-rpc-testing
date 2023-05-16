@@ -8,13 +8,12 @@ use solana_program::hash::Hash;
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use tokio::sync::RwLock;
 use crate::cli::Args;
-use crate::config::{Config};
 
 pub type BlockHashGetter = Arc<RwLock<Hash>>;
 
 #[async_trait::async_trait]
 pub trait Benchmark: Clone + Send + 'static {
-    async fn run(self, rpc_client: Arc<RpcClient>, duration: Duration, args: Args, config: Config, random_number: u64) -> anyhow::Result<Run>;
+    async fn run(self, rpc_client: Arc<RpcClient>, duration: Duration, random_number: u64) -> anyhow::Result<Run>;
 }
 
 #[derive(Default, Serialize)]
@@ -40,18 +39,16 @@ pub struct Stats {
 pub struct Bencher;
 
 impl Bencher {
-    pub async fn bench<B: Benchmark + Send + Clone>(instant: B, args: Args, config: Config) -> anyhow::Result<Stats> {
+    pub async fn bench<B: Benchmark + Send + Clone>(instant: B, args: Args) -> anyhow::Result<Stats> {
         let start = Instant::now();
         let mut random = StdRng::seed_from_u64(0);
         let futs = (0..args.threads).map(|_| {
             let rpc_client = args.get_rpc_client();
             let duration = args.get_duration_to_run_test();
-            let args = args.clone();
-            let config = config.clone();
             let random_number = random.gen();
             let instant = instant.clone();
             tokio::spawn(async move {
-                instant.run(rpc_client.clone(), duration, args, config, random_number).await.unwrap()
+                instant.run(rpc_client.clone(), duration, random_number).await.unwrap()
             })
         });
 

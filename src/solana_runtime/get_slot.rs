@@ -12,10 +12,10 @@ pub struct GetSlotTest;
 
 #[async_trait::async_trait]
 impl TestingTask for GetSlotTest {
-    async fn test(&self, args: Args, config: Config) -> anyhow::Result<()> {
+    async fn test(&self, args: Args, _: Config) -> anyhow::Result<()> {
         let instant = GetSlotTest;
-        let stats = Bencher::bench::<Self>(instant, args, config).await?;
-        info!("GetSlotTest {}", serde_json::to_string(&stats)?);
+        let stats = Bencher::bench::<Self>(instant, args).await?;
+        info!("{} {}", self.get_name(), serde_json::to_string(&stats)?);
         Ok(())
     }
 
@@ -27,7 +27,7 @@ impl TestingTask for GetSlotTest {
 #[async_trait::async_trait]
 impl Benchmark for GetSlotTest {
 
-    async fn run(self, rpc_client: Arc<RpcClient>, duration: Duration, _: Args, _: Config, _: u64) -> anyhow::Result<Run> {
+    async fn run(self, rpc_client: Arc<RpcClient>, duration: Duration, _: u64) -> anyhow::Result<Run> {
         let mut result = Run::default();
 
         let start = Instant::now();
