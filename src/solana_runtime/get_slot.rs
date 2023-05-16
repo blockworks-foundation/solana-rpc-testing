@@ -7,12 +7,14 @@ use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use crate::bencher::{Bencher, Benchmark, Run};
 use crate::{cli::Args, config::Config, test_registry::TestingTask};
 
+#[derive(Clone)]
 pub struct GetSlotTest;
 
 #[async_trait::async_trait]
 impl TestingTask for GetSlotTest {
-    async fn test(&self, args: Args, _config: Config) -> anyhow::Result<()> {
-        let stats = Bencher::bench::<Self>(args).await?;
+    async fn test(&self, args: Args, config: Config) -> anyhow::Result<()> {
+        let instant = GetSlotTest;
+        let stats = Bencher::bench::<Self>(instant, args, config).await?;
         info!("GetSlotTest {}", serde_json::to_string(&stats)?);
         Ok(())
     }
@@ -24,11 +26,8 @@ impl TestingTask for GetSlotTest {
 
 #[async_trait::async_trait]
 impl Benchmark for GetSlotTest {
-    async fn prepare(_: Arc<RpcClient>) -> anyhow::Result<Self> {
-        Ok(Self)
-    }
 
-    async fn run(&mut self, rpc_client: Arc<RpcClient>, duration: Duration) -> anyhow::Result<Run> {
+    async fn run(self, rpc_client: Arc<RpcClient>, duration: Duration, _: Args, _: Config, _: u64) -> anyhow::Result<Run> {
         let mut result = Run::default();
 
         let start = Instant::now();
