@@ -54,6 +54,9 @@ pub struct Args {
     #[arg(short = 't', long, default_value_t = 32)]
     pub threads: u64,
 
+    #[arg(short = 'o', long, default_value_t = String::from("out.json"))]
+    pub output_file: String,
+
     #[arg(short = 'p', long)]
     pub print_logs: bool,
 }

@@ -1,11 +1,11 @@
-use crate::bencher::{Benchmark, Run, Bencher};
+use crate::bencher::{Bencher, Benchmark, Run, Stats};
 use crate::config::{Market, User};
 use crate::test_registry::TestingTask;
 use crate::utils::noop;
 use async_trait::async_trait;
-use rand::seq::SliceRandom;
-use rand::{SeedableRng, Rng};
 use rand::rngs::StdRng;
+use rand::seq::SliceRandom;
+use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::compute_budget;
@@ -56,7 +56,7 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
         &self,
         args: crate::cli::Args,
         config: crate::config::Config,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<Stats> {
         let openbook_data = config
             .programs
             .iter()
@@ -80,9 +80,9 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
             place_order_cmd: place_order_cmd.instruction,
             openbook_pid,
         };
-        let metric = Bencher::bench::<SimulateOpenbookV2PlaceOrderBench>( instant, args).await?;
+        let metric = Bencher::bench::<SimulateOpenbookV2PlaceOrderBench>(instant, args).await?;
         log::info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
-        Ok(())
+        Ok(metric)
     }
 
     fn get_name(&self) -> String {
@@ -99,11 +99,14 @@ pub struct SimulateOpenbookV2PlaceOrderBench {
     pub openbook_pid: Pubkey,
 }
 
-
 #[async_trait::async_trait]
 impl Benchmark for SimulateOpenbookV2PlaceOrderBench {
-
-    async fn run(self, rpc_client: Arc<RpcClient>, duration: std::time::Duration, random_number: u64) -> anyhow::Result<crate::bencher::Run> {
+    async fn run(
+        self,
+        rpc_client: Arc<RpcClient>,
+        duration: std::time::Duration,
+        random_number: u64,
+    ) -> anyhow::Result<crate::bencher::Run> {
         let mut result = Run::default();
 
         let mut rng = StdRng::seed_from_u64(random_number);
@@ -114,8 +117,8 @@ impl Benchmark for SimulateOpenbookV2PlaceOrderBench {
             let user = self.users.choose(&mut rng).cloned().unwrap();
 
             let open_orders = user.open_orders[market.market_index]
-                    .open_orders
-                    .to_pubkey();
+                .open_orders
+                .to_pubkey();
             let base_token_account = user.token_data[market.market_index + 1]
                 .token_account
                 .to_pubkey();
@@ -169,11 +172,8 @@ impl Benchmark for SimulateOpenbookV2PlaceOrderBench {
                 AccountMeta::new_readonly(solana_sdk::system_program::id(), false),
             ];
 
-            let ix = Instruction::new_with_bytes(
-                self.openbook_pid,
-                place_order_ix.as_slice(),
-                accounts,
-            );
+            let ix =
+                Instruction::new_with_bytes(self.openbook_pid, place_order_ix.as_slice(), accounts);
 
             let recent_blockhash = *self.block_hash.read().await;
 
@@ -181,9 +181,7 @@ impl Benchmark for SimulateOpenbookV2PlaceOrderBench {
             let noop_ix = noop::timestamp();
             // to have higher compute budget limit
             let cu_limits_ix =
-                compute_budget::ComputeBudgetInstruction::set_compute_unit_limit(
-                    1000000,
-                );
+                compute_budget::ComputeBudgetInstruction::set_compute_unit_limit(1000000);
 
             let transaction = Transaction::new(
                 &[&user.get_keypair()],
