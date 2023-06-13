@@ -1,24 +1,23 @@
-use crate::bencher::{Bencher, Benchmark, Run, Stats};
-use crate::config::{Market, User};
-use crate::test_registry::TestingTask;
-use crate::utils::noop;
+use crate::{
+    bencher::{Bencher, Benchmark, Run, Stats},
+    config::{Market, User},
+    test_registry::TestingTask,
+    utils::noop,
+};
 use async_trait::async_trait;
-use rand::rngs::StdRng;
-use rand::seq::SliceRandom;
-use rand::{Rng, SeedableRng};
+use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_sdk::compute_budget;
-use solana_sdk::hash::Hash;
 use solana_sdk::{
+    compute_budget,
+    hash::Hash,
     instruction::{AccountMeta, Instruction},
     message::Message,
     pubkey::Pubkey,
     signer::Signer,
     transaction::Transaction,
 };
-use std::mem::size_of;
-use std::{str::FromStr, sync::Arc, time::Instant};
+use std::{mem::size_of, str::FromStr, sync::Arc, time::Instant};
 use tokio::sync::RwLock;
 
 #[derive(Clone)]
@@ -86,7 +85,7 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
     }
 
     fn get_name(&self) -> String {
-        format!("Simulating openbook place orders")
+        "Simulating openbook place orders".to_string()
     }
 }
 
@@ -148,9 +147,7 @@ impl Benchmark for SimulateOpenbookV2PlaceOrderBench {
             assert!(bytes.len() + 8 == place_order_ix.len());
 
             // copy the instruction data
-            for i in 0..bytes.len() {
-                place_order_ix[8 + i] = bytes[i];
-            }
+            place_order_ix[8..(bytes.len() + 8)].copy_from_slice(&bytes[..]);
 
             let token_account = if side {
                 base_token_account

@@ -88,7 +88,7 @@ impl Bencher {
             .sorted_by_key(|(_e, c)| *c)
             .rev()
             .take(5)
-            .map(|(e, c)| ((*e).clone(), c.clone()))
+            .map(|(e, c)| ((*e).clone(), *c))
             .collect_vec();
 
         Ok(Stats {

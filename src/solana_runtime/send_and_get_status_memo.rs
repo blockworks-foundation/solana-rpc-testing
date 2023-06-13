@@ -74,7 +74,7 @@ impl Benchmark for SendMemoTransactionsBench {
             let payer = self.payers.choose(&mut rng).unwrap();
 
             let blockhash = { *self.block_hash.read().await };
-            let tx = create_memo_tx(&msg, &payer, blockhash);
+            let tx = create_memo_tx(&msg, payer, blockhash);
             match rpc_client.send_transaction(&tx).await {
                 Ok(_) => {
                     result.requests_completed += 1;

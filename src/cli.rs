@@ -76,13 +76,10 @@ impl Args {
                 match res {
                     Ok((mut stream, _)) => loop {
                         let log = stream.next().await;
-                        match log {
-                            Some(log) => {
-                                for log_s in log.value.logs {
-                                    println!("{}", log_s);
-                                }
+                        if let Some(log) = log {
+                            for log_s in log.value.logs {
+                                println!("{}", log_s);
                             }
-                            None => {}
                         }
                     },
                     Err(e) => {
