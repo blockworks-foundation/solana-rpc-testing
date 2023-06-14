@@ -1,6 +1,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use bytes::Bytes;
+use reqwest::header::CONTENT_TYPE;
 use serde_json::{json, Value};
 use solana_client::rpc_request::RpcRequest;
 use solana_program::pubkey::Pubkey;
@@ -48,23 +49,34 @@ impl CustomRpcClient {
         self.send(RpcRequest::GetSlot, Value::Null).await
     }
 
+    pub async fn serialize_tx(tx: impl SerializableTransaction) -> String {
+        let tx = bincode::serialize(&tx).unwrap();
+        bs58::encode(tx).into_string()
+    }
+
     pub async fn raw_get_block(&mut self, slot: impl Into<u64>) {
         self.send(RpcRequest::GetBlock, json! {[slot.into()]}).await
     }
 
     pub async fn raw_get_multiple_accounts(&mut self, accounts: Vec<Pubkey>) {
-        self.send(
-            RpcRequest::GetMultipleAccounts,
-            serde_json::to_value(accounts).unwrap(),
-        )
-        .await
+        let accounts: Vec<String> = accounts
+            .into_iter()
+            .map(|pubkey| pubkey.to_string())
+            .collect();
+
+        self.send(RpcRequest::GetMultipleAccounts, json!([accounts]))
+            .await
     }
 
     pub async fn raw_send_transaction(&mut self, tx: impl SerializableTransaction) {
+        let tx = Self::serialize_tx(tx).await;
+
         self.send(RpcRequest::SendTransaction, json! {[tx]}).await
     }
 
     pub async fn raw_simulate_transaction(&mut self, tx: impl SerializableTransaction) {
+        let tx = Self::serialize_tx(tx).await;
+
         self.send(RpcRequest::SimulateTransaction, json! {[tx]})
             .await
     }
@@ -82,7 +94,7 @@ impl CustomRpcClient {
 
         let err = match self.send_raw(req_raw_body).await {
             Ok(res_bytes) => {
-                self.metric.bytes_received += 1;
+                self.metric.bytes_received += res_bytes.len() as u64;
 
                 let res: Value =
                     serde_json::from_slice(&res_bytes).expect("Server invalid response json");
@@ -105,6 +117,7 @@ impl CustomRpcClient {
         Ok(self
             .client
             .post(&self.url)
+            .header(CONTENT_TYPE, "application/json")
             .body(req_raw_body)
             .send()
             .await?
