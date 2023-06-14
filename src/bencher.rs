@@ -2,12 +2,11 @@ use crate::{cli::Args, rpc_client::CustomRpcClient};
 use itertools::Itertools;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use serde::Serialize;
-use solana_program::hash::Hash;
+
 use std::{
-    sync::Arc,
     time::{Duration, Instant},
 };
-use tokio::sync::RwLock;
+
 
 #[async_trait::async_trait]
 pub trait Benchmark: Clone + Send + 'static {
