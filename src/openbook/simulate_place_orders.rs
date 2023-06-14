@@ -1,13 +1,13 @@
 use crate::{
-    bencher::{Bencher, Benchmark, Run, Stats},
+    bencher::{Bencher, Benchmark, Stats},
     config::{Market, User},
+    rpc_client::CustomRpcClient,
     test_registry::TestingTask,
     utils::noop,
 };
 use async_trait::async_trait;
 use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{
     compute_budget,
     hash::Hash,
@@ -102,14 +102,13 @@ pub struct SimulateOpenbookV2PlaceOrderBench {
 impl Benchmark for SimulateOpenbookV2PlaceOrderBench {
     async fn run(
         self,
-        rpc_client: Arc<RpcClient>,
+        rpc_client: &mut CustomRpcClient,
         duration: std::time::Duration,
         random_number: u64,
-    ) -> anyhow::Result<crate::bencher::Run> {
-        let mut result = Run::default();
-
+    ) -> anyhow::Result<()> {
         let mut rng = StdRng::seed_from_u64(random_number);
         let start = Instant::now();
+
         while start.elapsed() < duration {
             let mut place_order_ix = self.place_order_cmd.clone();
             let market = self.markets.choose(&mut rng).cloned().unwrap();
@@ -186,18 +185,9 @@ impl Benchmark for SimulateOpenbookV2PlaceOrderBench {
                 recent_blockhash,
             );
 
-            match rpc_client.simulate_transaction(&transaction).await {
-                Ok(_) => {
-                    result.requests_completed += 1;
-                    result.bytes_received += 0;
-                }
-                Err(e) => {
-                    result.requests_failed += 1;
-                    result.errors.push(format!("{:?}", e.kind()));
-                }
-            }
-            result.bytes_sent += 0;
+            rpc_client.raw_simulate_transaction(transaction).await;
         }
-        Ok(result)
+
+        Ok(())
     }
 }

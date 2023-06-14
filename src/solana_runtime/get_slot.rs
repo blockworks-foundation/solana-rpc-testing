@@ -1,11 +1,14 @@
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use log::info;
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 
-use crate::bencher::{Bencher, Benchmark, Run, Stats};
-use crate::{cli::Args, config::Config, test_registry::TestingTask};
+use crate::{
+    bencher::{Bencher, Benchmark, Stats},
+    cli::Args,
+    config::Config,
+    rpc_client::CustomRpcClient,
+    test_registry::TestingTask,
+};
 
 #[derive(Clone)]
 pub struct GetSlotTest;
@@ -28,27 +31,16 @@ impl TestingTask for GetSlotTest {
 impl Benchmark for GetSlotTest {
     async fn run(
         self,
-        rpc_client: Arc<RpcClient>,
+        rpc_client: &mut CustomRpcClient,
         duration: Duration,
         _: u64,
-    ) -> anyhow::Result<Run> {
-        let mut result = Run::default();
-
+    ) -> anyhow::Result<()> {
         let start = Instant::now();
+
         while start.elapsed() < duration {
-            match rpc_client.get_slot().await {
-                Ok(_) => {
-                    result.requests_completed += 1;
-                    result.bytes_received += 0;
-                }
-                Err(e) => {
-                    result.requests_failed += 1;
-                    result.errors.push(format!("{:?}", e.kind()));
-                }
-            }
-            result.bytes_sent += 0;
+            rpc_client.raw_get_slot().await;
         }
 
-        Ok(result)
+        Ok(())
     }
 }

@@ -1,10 +1,11 @@
-pub mod bencher;
+mod bencher;
 mod cli;
 mod config;
 mod openbook;
 mod solana_runtime;
 mod test_registry;
 mod utils;
+mod rpc_client;
 
 use std::{sync::Arc, time::Duration};
 

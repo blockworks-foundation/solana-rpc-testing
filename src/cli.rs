@@ -5,7 +5,7 @@ use futures::StreamExt;
 use solana_client::{
     nonblocking::pubsub_client::PubsubClient, rpc_config::RpcTransactionLogsConfig,
 };
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+
 use solana_sdk::hash::Hash;
 use tokio::sync::RwLock;
 
@@ -15,7 +15,7 @@ use crate::{
         accounts_fetching::AccountsFetchingTests, get_block::GetBlockTest, get_slot::GetSlotTest,
         send_and_get_status_memo::SendAndConfrimTesting,
     },
-    test_registry::TestRegistry,
+    test_registry::TestRegistry, rpc_client::CustomRpcClient,
 };
 
 #[derive(Parser, Debug, Clone)]
@@ -122,7 +122,7 @@ impl Args {
     }
 
     #[inline]
-    pub fn get_rpc_client(&self) -> Arc<RpcClient> {
-        Arc::new(RpcClient::new(self.rpc_addr.clone()))
+    pub fn get_rpc_client(&self) -> CustomRpcClient {
+        CustomRpcClient::new(self.rpc_addr.clone())
     }
 }
