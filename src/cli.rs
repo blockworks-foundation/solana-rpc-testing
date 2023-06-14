@@ -11,11 +11,12 @@ use tokio::sync::RwLock;
 
 use crate::{
     openbook::simulate_place_orders::SimulateOpenbookV2PlaceOrder,
+    rpc_client::CustomRpcClient,
     solana_runtime::{
         accounts_fetching::AccountsFetchingTests, get_block::GetBlockTest, get_slot::GetSlotTest,
         send_and_get_status_memo::SendAndConfrimTesting,
     },
-    test_registry::TestRegistry, rpc_client::CustomRpcClient,
+    test_registry::TestRegistry,
 };
 
 #[derive(Parser, Debug, Clone)]
