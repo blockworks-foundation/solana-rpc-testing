@@ -9,8 +9,6 @@ use std::{
 };
 use tokio::sync::RwLock;
 
-pub type BlockHashGetter = Arc<RwLock<Hash>>;
-
 #[async_trait::async_trait]
 pub trait Benchmark: Clone + Send + 'static {
     async fn run(
