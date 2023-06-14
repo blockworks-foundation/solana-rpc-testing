@@ -1,7 +1,8 @@
-pub mod bencher;
+mod bencher;
 mod cli;
 mod config;
 mod openbook;
+mod rpc_client;
 mod solana_runtime;
 mod test_registry;
 mod utils;

@@ -1,10 +1,10 @@
 use crate::{
-    bencher::{Bencher, Benchmark, Run, Stats},
+    bencher::{Bencher, Benchmark, Stats},
+    rpc_client::CustomRpcClient,
     test_registry::TestingTask,
 };
 use async_trait::async_trait;
 use rand::{distributions::Alphanumeric, prelude::Distribution, seq::SliceRandom, SeedableRng};
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{
     hash::Hash, instruction::Instruction, message::Message, pubkey::Pubkey, signature::Keypair,
     signer::Signer, transaction::Transaction,
@@ -61,12 +61,10 @@ struct SendMemoTransactionsBench {
 impl Benchmark for SendMemoTransactionsBench {
     async fn run(
         self,
-        rpc_client: Arc<RpcClient>,
+        rpc_client: &mut CustomRpcClient,
         duration: std::time::Duration,
         random_number: u64,
-    ) -> anyhow::Result<crate::bencher::Run> {
-        let mut result = Run::default();
-
+    ) -> anyhow::Result<()> {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(random_number);
         let start = Instant::now();
         while start.elapsed() < duration {
@@ -74,19 +72,10 @@ impl Benchmark for SendMemoTransactionsBench {
             let payer = self.payers.choose(&mut rng).unwrap();
 
             let blockhash = { *self.block_hash.read().await };
-            let tx = create_memo_tx(&msg, &payer, blockhash);
-            match rpc_client.send_transaction(&tx).await {
-                Ok(_) => {
-                    result.requests_completed += 1;
-                    result.bytes_received += 0;
-                }
-                Err(e) => {
-                    result.requests_failed += 1;
-                    result.errors.push(format!("{:?}", e.kind()));
-                }
-            }
-            result.bytes_sent += 0;
+            let tx = create_memo_tx(&msg, payer, blockhash);
+            let _ = rpc_client.raw_send_transaction(tx).await;
         }
-        Ok(result)
+
+        Ok(())
     }
 }

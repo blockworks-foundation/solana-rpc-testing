@@ -83,12 +83,3 @@ pub struct Config {
     pub mints: Vec<String>,
     pub markets: Vec<Market>,
 }
-
-impl Config {
-    pub fn get_payers(&self) -> Vec<Keypair> {
-        self.users
-            .iter()
-            .map(|x| Keypair::from_bytes(x.secret.as_slice()).unwrap())
-            .collect()
-    }
-}

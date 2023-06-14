@@ -1,14 +1,14 @@
 use async_trait::async_trait;
 use const_env::from_env;
 use rand::{seq::IteratorRandom, SeedableRng};
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
 use tokio::time::Instant;
 
 use crate::{
-    bencher::{Bencher, Benchmark, Run, Stats},
+    bencher::{Bencher, Benchmark, Stats},
     config::Config,
+    rpc_client::CustomRpcClient,
     test_registry::TestingTask,
 };
 
@@ -56,15 +56,15 @@ pub struct GetAccountsBench {
 impl Benchmark for GetAccountsBench {
     async fn run(
         self,
-        rpc_client: Arc<RpcClient>,
+        rpc_client: &mut CustomRpcClient,
         duration: std::time::Duration,
         random_number: u64,
-    ) -> anyhow::Result<crate::bencher::Run> {
-        let mut result = Run::default();
+    ) -> anyhow::Result<()> {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(random_number);
         let number_of_fetched_accounts =
             NB_OF_ACCOUNTS_FETCHED_PER_TASK.min(self.accounts_list.len());
         let start = Instant::now();
+
         while start.elapsed() < duration {
             let accounts = self
                 .accounts_list
@@ -72,18 +72,9 @@ impl Benchmark for GetAccountsBench {
                 .copied()
                 .choose_multiple(&mut rng, number_of_fetched_accounts);
 
-            match rpc_client.get_multiple_accounts(accounts.as_slice()).await {
-                Ok(_) => {
-                    result.requests_completed += 1;
-                    result.bytes_received += 0;
-                }
-                Err(e) => {
-                    result.requests_failed += 1;
-                    result.errors.push(format!("{:?}", e.kind()));
-                }
-            }
-            result.bytes_sent += 0;
+            rpc_client.raw_get_multiple_accounts(accounts).await
         }
-        Ok(result)
+
+        Ok(())
     }
 }

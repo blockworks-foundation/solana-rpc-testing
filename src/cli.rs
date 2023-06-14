@@ -5,12 +5,13 @@ use futures::StreamExt;
 use solana_client::{
     nonblocking::pubsub_client::PubsubClient, rpc_config::RpcTransactionLogsConfig,
 };
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+
 use solana_sdk::hash::Hash;
 use tokio::sync::RwLock;
 
 use crate::{
     openbook::simulate_place_orders::SimulateOpenbookV2PlaceOrder,
+    rpc_client::CustomRpcClient,
     solana_runtime::{
         accounts_fetching::AccountsFetchingTests, get_block::GetBlockTest, get_slot::GetSlotTest,
         send_and_get_status_memo::SendAndConfrimTesting,
@@ -76,13 +77,10 @@ impl Args {
                 match res {
                     Ok((mut stream, _)) => loop {
                         let log = stream.next().await;
-                        match log {
-                            Some(log) => {
-                                for log_s in log.value.logs {
-                                    println!("{}", log_s);
-                                }
+                        if let Some(log) = log {
+                            for log_s in log.value.logs {
+                                println!("{}", log_s);
                             }
-                            None => {}
                         }
                     },
                     Err(e) => {
@@ -125,7 +123,7 @@ impl Args {
     }
 
     #[inline]
-    pub fn get_rpc_client(&self) -> Arc<RpcClient> {
-        Arc::new(RpcClient::new(self.rpc_addr.clone()))
+    pub fn get_rpc_client(&self) -> CustomRpcClient {
+        CustomRpcClient::new(self.rpc_addr.clone())
     }
 }

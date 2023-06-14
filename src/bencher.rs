@@ -1,24 +1,21 @@
-use crate::cli::Args;
+use crate::{cli::Args, rpc_client::CustomRpcClient};
 use itertools::Itertools;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use serde::Serialize;
-use solana_program::hash::Hash;
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
 
-pub type BlockHashGetter = Arc<RwLock<Hash>>;
+use std::{
+    time::{Duration, Instant},
+};
+
 
 #[async_trait::async_trait]
 pub trait Benchmark: Clone + Send + 'static {
     async fn run(
         self,
-        rpc_client: Arc<RpcClient>,
+        rpc_client: &mut CustomRpcClient,
         duration: Duration,
         random_number: u64,
-    ) -> anyhow::Result<Run>;
+    ) -> anyhow::Result<()>;
 }
 
 #[derive(Default, Serialize)]
@@ -54,19 +51,22 @@ impl Bencher {
         let start = Instant::now();
         let mut random = StdRng::seed_from_u64(0);
         let futs = (0..args.threads).map(|_| {
-            let rpc_client = args.get_rpc_client();
+            let mut rpc_client = args.get_rpc_client();
             let duration = args.get_duration_to_run_test();
             let random_number = random.gen();
             let instance = instant.clone();
+
             tokio::spawn(async move {
                 instance
-                    .run(rpc_client.clone(), duration, random_number)
+                    .run(&mut rpc_client, duration, random_number)
                     .await
-                    .unwrap()
+                    .unwrap();
+
+                rpc_client.into()
             })
         });
 
-        let all_results = futures::future::try_join_all(futs).await?;
+        let all_results: Vec<Run> = futures::future::try_join_all(futs).await?;
 
         let time = start.elapsed();
 
@@ -88,7 +88,7 @@ impl Bencher {
             .sorted_by_key(|(_e, c)| *c)
             .rev()
             .take(5)
-            .map(|(e, c)| ((*e).clone(), c.clone()))
+            .map(|(e, c)| ((*e).clone(), *c))
             .collect_vec();
 
         Ok(Stats {
