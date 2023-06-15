@@ -10,8 +10,8 @@ EOF
 fi
 
 
-for i in {5..100..5}
+for i in {5..200..5}
 do
-   cargo run -- -a -t $i -o "$1/$i.json" "${@:2}"
+   cargo run --release -- -a -t $i -o "$1/$i.json" "${@:2}"
    sleep 10s
 done
