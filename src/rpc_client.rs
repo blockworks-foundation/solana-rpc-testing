@@ -96,15 +96,17 @@ impl CustomRpcClient {
             Ok(res_bytes) => {
                 self.metric.bytes_received += res_bytes.len() as u64;
 
-                let res: Value =
-                    serde_json::from_slice(&res_bytes).expect("Server invalid response json");
+                match serde_json::from_slice::<Value>(&res_bytes) {
+                    Ok(res) => {
+                        if res.get("result").is_some() {
+                            self.metric.requests_completed += 1;
+                            return;
+                        }
 
-                if res.get("result").is_some() {
-                    self.metric.requests_completed += 1;
-                    return;
+                        res["error"].to_string()
+                    }
+                    Err(err) => err.to_string(),
                 }
-
-                res["error"].to_string()
             }
             Err(err) => err.to_string(),
         };
@@ -114,14 +116,16 @@ impl CustomRpcClient {
     }
 
     pub async fn send_raw(&self, req_raw_body: Vec<u8>) -> anyhow::Result<Bytes> {
-        Ok(self
+        let response = self
             .client
             .post(&self.url)
             .header(CONTENT_TYPE, "application/json")
             .body(req_raw_body)
             .send()
-            .await?
-            .bytes()
-            .await?)
+            .await?;
+
+        response.error_for_status_ref()?;
+
+        Ok(response.bytes().await?)
     }
 }
