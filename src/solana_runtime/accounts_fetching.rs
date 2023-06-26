@@ -2,11 +2,12 @@ use async_trait::async_trait;
 use const_env::from_env;
 use rand::{seq::IteratorRandom, SeedableRng};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 use tokio::time::Instant;
 
 use crate::{
     bencher::{Bencher, Benchmark, Stats},
+    cli::Args,
     config::Config,
     rpc_client::CustomRpcClient,
     test_registry::TestingTask,
@@ -25,7 +26,7 @@ impl AccountsFetchingTests {
 
 #[async_trait]
 impl TestingTask for AccountsFetchingTests {
-    async fn test(&self, args: crate::cli::Args, config: Config) -> anyhow::Result<Stats> {
+    async fn test(&self, args: &Args, config: &Config) -> anyhow::Result<Stats> {
         let accounts = config
             .known_accounts
             .iter()
@@ -35,21 +36,20 @@ impl TestingTask for AccountsFetchingTests {
             AccountsFetchingTests::create_random_address(accounts.len());
 
         let instant = GetAccountsBench {
-            accounts_list: [accounts, unknown_accounts].concat(),
+            accounts_list: Arc::new([accounts, unknown_accounts].concat()),
         };
         let metric = Bencher::bench::<GetAccountsBench>(instant, args).await?;
-        log::info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
         Ok(metric)
     }
 
-    fn get_name(&self) -> String {
-        "Accounts Fetching".to_string()
+    fn get_name(&self) -> &'static str {
+        "Accounts Fetching"
     }
 }
 
 #[derive(Clone)]
 pub struct GetAccountsBench {
-    accounts_list: Vec<Pubkey>,
+    accounts_list: Arc<Vec<Pubkey>>,
 }
 
 #[async_trait::async_trait]

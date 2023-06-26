@@ -1,6 +1,5 @@
 use std::time::{Duration, Instant};
 
-use log::info;
 use solana_sdk::slot_history::Slot;
 
 use crate::{
@@ -15,16 +14,15 @@ pub struct GetBlockTest;
 
 #[async_trait::async_trait]
 impl TestingTask for GetBlockTest {
-    async fn test(&self, args: Args, _: Config) -> anyhow::Result<Stats> {
+    async fn test(&self, args: &Args, _: &Config) -> anyhow::Result<Stats> {
         let slot = args.get_rpc_client().get_slot().await.unwrap();
         let instant = GetBlockBench { slot };
         let metric = Bencher::bench::<GetBlockBench>(instant, args).await?;
-        info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
         Ok(metric)
     }
 
-    fn get_name(&self) -> String {
-        "GetBlockTest".to_string()
+    fn get_name(&self) -> &'static str {
+        "GetBlockTest"
     }
 }
 

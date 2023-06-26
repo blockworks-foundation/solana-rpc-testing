@@ -1,6 +1,7 @@
 use crate::{
     bencher::{Bencher, Benchmark, Stats},
-    config::{Market, User},
+    cli::Args,
+    config::{Config, Market, User},
     rpc_client::CustomRpcClient,
     test_registry::TestingTask,
     utils::noop,
@@ -51,11 +52,7 @@ impl ToPubkey for String {
 
 #[async_trait]
 impl TestingTask for SimulateOpenbookV2PlaceOrder {
-    async fn test(
-        &self,
-        args: crate::cli::Args,
-        config: crate::config::Config,
-    ) -> anyhow::Result<Stats> {
+    async fn test(&self, args: &Args, config: &Config) -> anyhow::Result<Stats> {
         let openbook_data = config
             .programs
             .iter()
@@ -80,12 +77,11 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
             openbook_pid,
         };
         let metric = Bencher::bench::<SimulateOpenbookV2PlaceOrderBench>(instant, args).await?;
-        log::info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
         Ok(metric)
     }
 
-    fn get_name(&self) -> String {
-        "Simulating openbook place orders".to_string()
+    fn get_name(&self) -> &'static str {
+        "Simulating openbook place orders"
     }
 }
 

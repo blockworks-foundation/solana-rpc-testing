@@ -15,15 +15,15 @@ pub struct GetSlotTest;
 
 #[async_trait::async_trait]
 impl TestingTask for GetSlotTest {
-    async fn test(&self, args: Args, _: Config) -> anyhow::Result<Stats> {
+    async fn test(&self, args: &Args, _: &Config) -> anyhow::Result<Stats> {
         let instant = GetSlotTest;
         let stats = Bencher::bench::<Self>(instant, args).await?;
         info!("{} {}", self.get_name(), serde_json::to_string(&stats)?);
         Ok(stats)
     }
 
-    fn get_name(&self) -> String {
-        "GetSlotTest".to_string()
+    fn get_name(&self) -> &'static str {
+        "GetSlotTest"
     }
 }
 

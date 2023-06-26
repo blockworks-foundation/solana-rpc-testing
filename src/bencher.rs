@@ -3,10 +3,7 @@ use itertools::Itertools;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use serde::Serialize;
 
-use std::{
-    time::{Duration, Instant},
-};
-
+use std::time::{Duration, Instant};
 
 #[async_trait::async_trait]
 pub trait Benchmark: Clone + Send + 'static {
@@ -27,7 +24,7 @@ pub struct Run {
     pub errors: Vec<String>,
 }
 
-#[derive(Default, Serialize, Clone)]
+#[derive(Default, Serialize, Clone, Debug)]
 pub struct Stats {
     pub total_requests: u64,
     pub requests_per_second: f64,
@@ -46,7 +43,7 @@ pub struct Bencher;
 impl Bencher {
     pub async fn bench<B: Benchmark + Send + Clone>(
         instant: B,
-        args: Args,
+        args: &Args,
     ) -> anyhow::Result<Stats> {
         let start = Instant::now();
         let mut random = StdRng::seed_from_u64(0);

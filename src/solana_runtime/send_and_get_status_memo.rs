@@ -1,5 +1,7 @@
 use crate::{
     bencher::{Bencher, Benchmark, Stats},
+    cli::Args,
+    config::Config,
     rpc_client::CustomRpcClient,
     test_registry::TestingTask,
 };
@@ -28,33 +30,24 @@ fn create_memo_tx(msg: &[u8], payer: &Keypair, blockhash: Hash) -> Transaction {
 
 #[async_trait]
 impl TestingTask for SendAndConfrimTesting {
-    async fn test(
-        &self,
-        args: crate::cli::Args,
-        config: crate::config::Config,
-    ) -> anyhow::Result<Stats> {
+    async fn test(&self, args: &Args, config: &Config) -> anyhow::Result<Stats> {
         let instant = SendMemoTransactionsBench {
             block_hash: self.block_hash.clone(),
-            payers: config
-                .users
-                .iter()
-                .map(|x| Arc::new(x.get_keypair()))
-                .collect(),
+            payers: Arc::new(config.users.iter().map(|x| x.get_keypair()).collect()),
         };
         let metric = Bencher::bench::<SendMemoTransactionsBench>(instant, args).await?;
-        log::info!("{} {}", self.get_name(), serde_json::to_string(&metric)?);
         Ok(metric)
     }
 
-    fn get_name(&self) -> String {
-        "Send and confirm memo transaction".to_string()
+    fn get_name(&self) -> &'static str {
+        "Send and confirm memo transaction"
     }
 }
 
 #[derive(Clone)]
 struct SendMemoTransactionsBench {
     block_hash: Arc<RwLock<Hash>>,
-    payers: Vec<Arc<Keypair>>,
+    payers: Arc<Vec<Keypair>>,
 }
 
 #[async_trait::async_trait]
