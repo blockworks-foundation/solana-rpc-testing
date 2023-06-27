@@ -42,8 +42,9 @@ impl TestingTask for AccountsFetchingTests {
         Ok(metric)
     }
 
-    fn get_name(&self) -> &'static str {
-        "Accounts Fetching"
+
+    fn get_name(&self) -> String {
+        "Accounts Fetching".to_string()
     }
 }
 

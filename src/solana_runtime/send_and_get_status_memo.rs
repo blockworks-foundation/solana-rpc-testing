@@ -39,8 +39,8 @@ impl TestingTask for SendAndConfrimTesting {
         Ok(metric)
     }
 
-    fn get_name(&self) -> &'static str {
-        "Send and confirm memo transaction"
+    fn get_name(&self) -> String {
+        "Send and confirm memo transaction".to_string()
     }
 }
 

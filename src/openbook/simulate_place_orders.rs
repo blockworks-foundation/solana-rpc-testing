@@ -80,8 +80,8 @@ impl TestingTask for SimulateOpenbookV2PlaceOrder {
         Ok(metric)
     }
 
-    fn get_name(&self) -> &'static str {
-        "Simulating openbook place orders"
+    fn get_name(&self) -> String {
+        "Simulating openbook place orders".to_string()
     }
 }
 

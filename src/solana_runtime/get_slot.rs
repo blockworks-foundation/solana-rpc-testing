@@ -22,8 +22,8 @@ impl TestingTask for GetSlotTest {
         Ok(stats)
     }
 
-    fn get_name(&self) -> &'static str {
-        "GetSlotTest"
+    fn get_name(&self) -> String {
+        "GetSlotTest".to_string()
     }
 }
 

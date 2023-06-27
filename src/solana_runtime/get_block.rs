@@ -21,8 +21,8 @@ impl TestingTask for GetBlockTest {
         Ok(metric)
     }
 
-    fn get_name(&self) -> &'static str {
-        "GetBlockTest"
+    fn get_name(&self) -> String {
+        "GetBlockTest".to_string()
     }
 }
 

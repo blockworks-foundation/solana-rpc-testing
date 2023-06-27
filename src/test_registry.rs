@@ -6,7 +6,7 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait TestingTask: Send + Sync {
     async fn test(&self, args: &Args, config: &Config) -> anyhow::Result<Stats>;
-    fn get_name(&self) -> &'static str;
+    fn get_name(&self) -> String;
 }
 
 #[derive(Default)]
@@ -19,7 +19,7 @@ impl TestRegistry {
         self.tests.push(test);
     }
 
-    pub async fn run_tests(&self, args: &Args, config: &Config) -> HashMap<&'static str, Stats> {
+    pub async fn run_tests(&self, args: &Args, config: &Config) -> HashMap<String, Stats> {
         let mut results = HashMap::new();
 
         for test in &self.tests {
