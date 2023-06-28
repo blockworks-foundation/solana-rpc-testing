@@ -24,17 +24,19 @@ async fn main() -> anyhow::Result<()> {
 
     assert_ne!(args.threads, 0, "Threads can't be 0");
     assert_ne!(args.duration_in_seconds, 0, "Duration can't be 0");
+    assert_ne!(args.output_file.len(), 0, "Output file name can't be empty");
 
-    let contents = std::fs::read_to_string(&args.config_file)
+    let config = std::fs::read_to_string(&args.config_file)
         .context("Should have been able to read the file")?;
-    let config_json: Config = serde_json::from_str(&contents).context("Config file not valid")?;
 
-    if config_json.users.is_empty() {
+    let config: Config = serde_json::from_str(&config).context("Config file not valid")?;
+
+    if config.users.is_empty() {
         log::error!("Config file is missing payers");
         bail!("No payers");
     }
 
-    if config_json.markets.is_empty() {
+    if config.markets.is_empty() {
         log::error!("Config file is missing markets");
         bail!("No markets")
     }
@@ -61,9 +63,13 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
-    args.generate_test_registry(block_hash)
-        .start_testing(args, config_json)
+    let results = args
+        .generate_test_registry(block_hash)
+        .run_tests(&args, &config)
         .await;
+
+    let results = serde_json::to_string(&results)?;
+    std::fs::write(args.output_file, results)?;
 
     Ok(())
 }
