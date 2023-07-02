@@ -64,8 +64,11 @@ impl CustomRpcClient {
             .map(|pubkey| pubkey.to_string())
             .collect();
 
-        self.send(RpcRequest::GetMultipleAccounts, json!([accounts]))
-            .await
+        self.send(
+            RpcRequest::GetMultipleAccounts,
+            json!([accounts, { "encoding": "base64+zstd" }]),
+        )
+        .await
     }
 
     pub async fn raw_send_transaction(&mut self, tx: impl SerializableTransaction) {

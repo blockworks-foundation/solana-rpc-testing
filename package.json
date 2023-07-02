@@ -19,6 +19,7 @@
     "@project-serum/anchor": "^0.26.0",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.75.0",
+    "axios": "^1.4.0",
     "cmd-ts": "^0.12.1",
     "loadash": "^1.0.0",
     "lodash": "^4.17.21"

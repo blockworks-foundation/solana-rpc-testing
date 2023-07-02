@@ -17,6 +17,7 @@ import { configure_accounts } from "./general/accounts";
 import { Command, OutputFile } from "./output_file";
 import { MintUtils } from "./general/mint_utils";
 import { OpenbookConfigurator } from "./openbook-v2/configure_openbook";
+import axios from "axios";
 
 const numberOfAccountsToBeCreated = option({
     type: number,
@@ -294,12 +295,29 @@ async function configure(
     console.log("Accounts created");
 
     const known_accounts = await Promise.all(accounts.map(async (account) => {
-        // get accountInfo as jsonParsed to get Size
-        let accountInfo = await connection.getParsedAccountInfo(account);
-        return [account,
-            // @ts-ignore
-            accountInfo.value.space
-        ] as [PublicKey, number];
+        // use axios to do the same
+        const size = await axios.post(endpoint.toString(), {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getAccountInfo",
+            "params": [
+                account.toString(),
+                {
+                    encoding: "base64+zstd",
+                }
+            ]
+        }).then(response => {
+            // check if response has erroor
+            if (response.data.error) {
+                throw new Error(response.data.error.message);
+            }
+
+            return response.data.result.value.space as number;
+        }).catch(error => {
+            throw new Error(error);
+        });
+
+        return [account, size] as [PublicKey, number];
     }));
 
 
