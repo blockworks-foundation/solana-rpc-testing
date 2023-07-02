@@ -8,6 +8,7 @@ import {
     Commitment,
     Connection,
     LAMPORTS_PER_SOL,
+    PublicKey,
 } from "@solana/web3.js";
 import { getKeypairFromFile } from "./common_utils";
 import { deploy_programs } from "./deploy_programs";
@@ -277,6 +278,7 @@ async function configure(
             market.quote_mint,
         ])
         .flat();
+
     const userAccountsList = userData
         .map((user) => {
             const allOpenOrdersAccounts = user.open_orders
@@ -286,13 +288,24 @@ async function configure(
             return allOpenOrdersAccounts.concat(allTokenAccounts);
         })
         .flat();
+
     accounts = accounts.concat(marketAccountsList).concat(userAccountsList);
 
     console.log("Accounts created");
 
+    const known_accounts = await Promise.all(accounts.map(async (account) => {
+        // get accountInfo as jsonParsed to get Size
+        let accountInfo = await connection.getParsedAccountInfo(account);
+        return [account,
+            // @ts-ignore
+            accountInfo.value.space
+        ] as [PublicKey, number];
+    }));
+
+
     let outputFile: OutputFile = {
         programs: programOutputData,
-        known_accounts: accounts,
+        known_accounts,
         users: userData,
         mints,
         markets,

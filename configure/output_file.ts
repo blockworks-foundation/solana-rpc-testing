@@ -17,7 +17,7 @@ export interface ProgramOutputData {
 export interface OutputFile {
   users: User[];
   programs: ProgramOutputData[];
-  known_accounts: PublicKey[];
+  known_accounts: [PublicKey, number][];
   mints: PublicKey[];
   markets: Market[];
 }
