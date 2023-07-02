@@ -78,7 +78,7 @@ pub struct Market {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
     pub programs: Vec<ProgramData>,
-    pub known_accounts: Vec<String>,
+    pub known_accounts: Vec<(String, u32)>,
     pub users: Vec<User>,
     pub mints: Vec<String>,
     pub markets: Vec<Market>,
