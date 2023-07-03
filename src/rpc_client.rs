@@ -4,9 +4,7 @@ use bytes::Bytes;
 use reqwest::header::CONTENT_TYPE;
 use serde_json::{json, Value};
 use solana_client::rpc_request::RpcRequest;
-use solana_program::pubkey::Pubkey;
-use solana_rpc_client::nonblocking::rpc_client::RpcClient;
-use solana_rpc_client::rpc_client::SerializableTransaction;
+use solana_rpc_client::{nonblocking::rpc_client::RpcClient, rpc_client::SerializableTransaction};
 
 use crate::bencher::Run;
 
@@ -58,13 +56,13 @@ impl CustomRpcClient {
         self.send(RpcRequest::GetBlock, json! {[slot.into()]}).await
     }
 
-    pub async fn raw_get_multiple_accounts(&mut self, accounts: Vec<Pubkey>) {
-        let accounts: Vec<String> = accounts
-            .into_iter()
-            .map(|pubkey| pubkey.to_string())
-            .collect();
+    //pub async fn raw_get_multiple_accounts(&mut self, accounts: &[&str]) {
+    //    self.send(RpcRequest::GetMultipleAccounts, json!([accounts]))
+    //        .await
+    //}
 
-        self.send(RpcRequest::GetMultipleAccounts, json!([accounts]))
+    pub async fn raw_get_account_info(&mut self, account: &str) {
+        self.send(RpcRequest::GetAccountInfo, json!([account, { "encoding" : "base64" }]))
             .await
     }
 

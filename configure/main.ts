@@ -12,7 +12,7 @@ import {
 import { getKeypairFromFile } from "./common_utils";
 import { deploy_programs } from "./deploy_programs";
 import { User, createUser, mintUser } from "./general/create_users";
-import { configure_accounts } from "./general/accounts";
+import { AccountGenerator } from "./general/accounts";
 import { Command, OutputFile } from "./output_file";
 import { MintUtils } from "./general/mint_utils";
 import { OpenbookConfigurator } from "./openbook-v2/configure_openbook";
@@ -257,42 +257,15 @@ async function configure(
     }
 
     console.log("Creating accounts");
-    let accounts = await configure_accounts(
-        connection,
-        authority,
-        numberOfAccountsToBeCreated,
-        programIds
-    );
 
-    // adding known accounts
-    const marketAccountsList = markets
-        .map((market) => [
-            market.asks,
-            market.bids,
-            market.market_pk,
-            market.oracle,
-            market.quote_vault,
-            market.base_vault,
-            market.base_mint,
-            market.quote_mint,
-        ])
-        .flat();
-    const userAccountsList = userData
-        .map((user) => {
-            const allOpenOrdersAccounts = user.open_orders
-                .map((x) => x.open_orders)
-                .flat();
-            const allTokenAccounts = user.token_data.map((x) => x.token_account);
-            return allOpenOrdersAccounts.concat(allTokenAccounts);
-        })
-        .flat();
-    accounts = accounts.concat(marketAccountsList).concat(userAccountsList);
+    const accounts = await (new AccountGenerator(connection, authority)).generate_fetchable_accounts(numberOfAccountsToBeCreated);
+    const known_accounts = accounts.map((x) => x.publicKey);
 
     console.log("Accounts created");
 
     let outputFile: OutputFile = {
         programs: programOutputData,
-        known_accounts: accounts,
+        known_accounts,
         users: userData,
         mints,
         markets,
