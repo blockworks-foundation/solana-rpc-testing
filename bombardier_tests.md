@@ -1,5 +1,7 @@
 # Validator RPC tests with Bombardier
 
+All test are done on the solana-test-validator.
+
 ## Test1: getBalance
 
 ### HTTP request
