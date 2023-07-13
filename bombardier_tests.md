@@ -78,6 +78,8 @@ Statistics        Avg      Stdev        Max
 
 ```
 
+Time out limit: 2800
+
 ### tokio_jsonrpsee branch
 
 125 concurrent connections
@@ -126,31 +128,58 @@ Statistics        Avg      Stdev        Max
 
 ```
 
+Time out limit: 2500
+
 ### jsonrpc_actix branch
 
-The getBalance request return an error no test can be done on this request:
+125 concurrent connections
 
 ```
-└─> curl http://192.168.88.12:8899 -X POST -H "Content-Type: application/json" -d '
->   {
->     "jsonrpc": "2.0",
->     "id": 1,
->     "method": "getBalance",
->     "params": [
->       "4EVAJ81v9fLjz2wp44SZmxgTbvYB8dBRZ6s1SAqP99eZ"
->     ]
->   }
-> '
-{"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params: invalid type: null, expected struct RpcContextConfig"},"id":1}
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 125 -n 1000000 -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id": 1,"method": "getBalance","params": ["4EVAJ81v9fLjz2wp44SZmxgTbvYB8dBRZ6s1SAqP99eZ"]}'
+Bombarding http://192.168.88.12:8899 with 1000000 request(s) using 125 connection(s)
+ 1000000 / 1000000 [=====================================================================================================================================] 100.00% 184913/s 5s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec    185880.61   26455.56  259388.41
+  Latency      670.18us   362.49us    17.54ms
+  Latency Distribution
+     50%   624.00us
+     75%   809.00us
+     90%     0.89ms
+     95%     0.93ms
+     99%     1.50ms
+  HTTP codes:
+    1xx - 0, 2xx - 1000000, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    77.81MB/s
 
 ```
 
+2000 concurrent connections
 
-## Timeout 
+```
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 2000 -n 1000000 -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id": 1,"method": "getBalance","params": ["4EVAJ81v9fLjz2wp44SZmxgTbvYB8dBRZ6s1SAqP99eZ"]}'
+Bombarding http://192.168.88.12:8899 with 1000000 request(s) using 2000 connection(s)
+ 1000000 / 1000000 [=====================================================================================================================================] 100.00% 198302/s 5s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec    202315.55   32308.67  269518.07
+  Latency        9.89ms     4.58ms   223.11ms
+  Latency Distribution
+     50%     8.14ms
+     75%    12.03ms
+     90%    13.40ms
+     95%    13.94ms
+     99%    24.31ms
+  HTTP codes:
+    1xx - 0, 2xx - 1000000, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    83.66MB/s
 
-When the number of concurrent connection increase, timeout appears in the result. The limit of timeout arrival is:
- - master: 2800
- - Jsonrpc: 2500
+```
+
+Time out limit: No time out at 10 000
+
 
 ## Test2: getBlocks
 
@@ -259,6 +288,218 @@ Statistics        Avg      Stdev        Max
 
 ```
 
+## Test3: getBlock
+
+### HTTP request
+
+```
+curl http://192.168.88.12:8899 -X POST -H "Content-Type: application/json" -d '
+  {
+    "jsonrpc": "2.0","id":1,
+    "method":"getBlock",
+    "params": [
+      184843,
+      {
+        "encoding": "json",
+        "maxSupportedTransactionVersion":0,
+        "transactionDetails":"full",
+        "rewards":false
+      }
+    ]
+  }
+'
+```
+
+### Bombardier cmd
+
+```
+~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 100 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id":1,"method":"getBlock","params":[184843,{"encoding": "json","maxSupportedTransactionVersion":0,"transactionDetails":"full","rewards":false}]}'
+
+```
+
+-c indicate the number of simultaneous connections
+
+--duration duration of the test.
+
+
+### Master branch
+
+```
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 200 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id":1,"method":"getBlock","params":[187390,{"encoding": "json","maxSupportedTransactionVersion":0,"transactionDetails":"full","rewards":false}]}'
+Bombarding http://192.168.88.12:8899 for 10s using 200 connection(s)
+[========================================================================================================================================================================] 10s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec      3882.70     330.33    4455.36
+  Latency       51.38ms     4.75ms   166.34ms
+  Latency Distribution
+     50%    50.80ms
+     75%    52.45ms
+     90%    53.91ms
+     95%    54.65ms
+     99%    58.50ms
+  HTTP codes:
+    1xx - 0, 2xx - 39022, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:     7.42MB/s
+```
+
+Time out limit: 300
+
+### tokio_jsonrpsee branch
+
+200 concurrent connections
+
+```
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 200 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id":1,"method":"getBlock","params":[187390,{"encoding": "json","maxSupportedTransactionVersion":0,"transactionDetails":"full","rewards":false}]}'
+Bombarding http://192.168.88.12:8899 for 10s using 200 connection(s)
+[========================================================================================================================================================================] 10s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec      4263.59     380.01    5064.36
+  Latency       46.79ms     4.28ms   149.55ms
+  Latency Distribution
+     50%    45.86ms
+     75%    47.72ms
+     90%    49.81ms
+     95%    51.56ms
+     99%    57.42ms
+  HTTP codes:
+    1xx - 0, 2xx - 42825, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:     8.64MB/s
+
+
+```
+
+Time out limit: 300
+
+### jsonrpc_actix branch
+
+200 concurrent connections
+
+```
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 200 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id":1,"method":"getBlock","params":[187390,{"encoding": "json","maxSupportedTransactionVersion":0,"transactionDetails":"full","rewards":false}]}'
+Bombarding http://192.168.88.12:8899 for 10s using 200 connection(s)
+[========================================================================================================================================================================] 10s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec     14901.73     971.98   16324.93
+  Latency       13.41ms     2.03ms    50.24ms
+  Latency Distribution
+     50%    14.19ms
+     75%    15.71ms
+     90%    17.36ms
+     95%    18.41ms
+     99%    20.71ms
+  HTTP codes:
+    1xx - 0, 2xx - 149207, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    28.25MB/s
+
+```
+
+Time out limit: No timeout at 10000
+
+## Test4: getSlot
+
+### HTTP request
+
+```
+curl http://192.168.88.12:8899 -X POST -H "Content-Type: application/json" -d '
+  {"jsonrpc":"2.0","id":1, "method":"getSlot"}
+'
+```
+
+### Bombardier cmd
+
+```
+~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 100 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc":"2.0","id":1, "method":"getSlot"}'
+
+```
+
+-c indicate the number of simultaneous connections
+
+--duration duration of the test.
+
+
+### Master branch
+
+500 concurrent connections
+
+```
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 500 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc":"2.0","id":1, "method":"getSlot"}'
+Bombarding http://192.168.88.12:8899 for 10s using 500 connection(s)
+[========================================================================================================================================================================] 10s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec     76056.20    5423.20   86208.69
+  Latency        6.58ms    27.37ms   262.22ms
+  Latency Distribution
+     50%     2.54ms
+     75%     2.97ms
+     90%     3.29ms
+     95%     3.43ms
+     99%   207.17ms
+  HTTP codes:
+    1xx - 0, 2xx - 758937, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    23.65MB/s
+```
+
+### tokio_jsonrpsee branch
+
+500 concurrent connections
+
+```
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 500 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc":"2.0","id":1, "method":"getSlot"}'
+Bombarding http://192.168.88.12:8899 for 10s using 500 connection(s)
+[========================================================================================================================================================================] 10s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec     79002.32    7471.10   94644.33
+  Latency        6.33ms    26.41ms   259.82ms
+  Latency Distribution
+     50%     2.44ms
+     75%     2.87ms
+     90%     3.22ms
+     95%     3.40ms
+     99%   198.62ms
+  HTTP codes:
+    1xx - 0, 2xx - 788621, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    24.58MB/s
+
+```
+
+
+### jsonrpc_actix branch
+
+500 concurrent connections
+
+```
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 500 --duration 10s -l -H "Content-Type: application/json" -b '{"jsonrpc":"2.0","id":1, "method":"getSlot"}'
+Bombarding http://192.168.88.12:8899 for 10s using 500 connection(s)
+[========================================================================================================================================================================] 10s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec    291864.09   28315.98  336660.32
+  Latency        1.70ms   412.45us    44.95ms
+  Latency Distribution
+     50%     1.67ms
+     75%     1.81ms
+     90%     2.10ms
+     95%     2.47ms
+     99%     3.22ms
+  HTTP codes:
+    1xx - 0, 2xx - 2915955, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    86.12MB/s
+
+```
+
+
+
 ## Conclusion
 
 The tokio_jsonrpsee show a little improvement for both request compared to master branch.
@@ -270,3 +511,10 @@ For the getBlocks the jsonrpc_actix show an important improvement of the perform
  - correct getBalance on jsonrpc_actix
  - Do the getBalance test for jsonrpc_actix branch
  - See the reason of the performance difference between jsonrpc_actix branch and the others.
+
+
+ GetBLockHash GetSlot.
+
+ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '
+  {"jsonrpc":"2.0","id":1, "method":"getSlot"}
+'
