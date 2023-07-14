@@ -132,6 +132,8 @@ Time out limit: 2500
 
 ### jsonrpc_actix branch
 
+#### Using default worker model (use all CPU - 5)
+
 125 concurrent connections
 
 ```
@@ -180,6 +182,59 @@ Statistics        Avg      Stdev        Max
 
 Time out limit: No time out at 10 000
 
+#### Using 1 worker 1 thread
+
+125 concurrent connections
+
+```
+ ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 125 -n 1000000 -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id": 1,"method": "getBalance","params": ["4EVAJ81v9fLjz2wp44SZmxgTbvYB8dBRZ6s1SAqP99eZ"]}'
+Bombarding http://192.168.88.12:8899 with 1000000 request(s) using 125 connection(s)
+ 1000000 / 1000000 [=====================================================================================================================================================================] 100.00% 70352/s 14s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec     71166.10    3382.88   78372.49
+  Latency        1.75ms    72.38us     7.97ms
+  Latency Distribution
+     50%     1.74ms
+     75%     1.76ms
+     90%     1.79ms
+     95%     1.86ms
+     99%     2.00ms
+  HTTP codes:
+    1xx - 0, 2xx - 1000000, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    30.13MB/s
+```
+
+#### Using 1 worker 512 threads
+
+125 concurrent connections
+
+```
+│~ via 🐏 17GiB/31GiB | 0B/33GiB 
+└─> ~/go/bin/bombardier -m POST http://192.168.88.12:8899 -c 125 -n 1000000 -l -H "Content-Type: application/json" -b '{"jsonrpc": "2.0","id": 1,"method": "getBalance","params": ["4EVAJ81v9fLjz2wp44SZmxgTbvYB8dBRZ6s1SAqP99eZ"]}'
+Bombarding http://192.168.88.12:8899 with 1000000 request(s) using 125 connection(s)
+ 1000000 / 1000000 [=====================================================================================================================================================================] 100.00% 72391/s 13s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec     72981.41    3820.08   78156.79
+  Latency        1.71ms    82.02us     9.94ms
+  Latency Distribution
+     50%     1.70ms
+     75%     1.72ms
+     90%     1.74ms
+     95%     1.78ms
+     99%     1.93ms
+  HTTP codes:
+    1xx - 0, 2xx - 1000000, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:    30.90MB/s
+```
+
+### Worker model conclusion
+
+The main diff between jsonrpsee execution and Actix seem to come from the CPU use. Jsonrpsee use on CPU whereas the default worker model of Actixw use all CPU.
+With one CPU Actix perform a little a little worse than jsonrpsee.
 
 ## Test2: getBlocks
 
@@ -504,17 +559,9 @@ Statistics        Avg      Stdev        Max
 
 The tokio_jsonrpsee show a little improvement for both request compared to master branch.
 
-For the getBlocks the jsonrpc_actix show an important improvement of the performance. I've to find the reason because I don't think it's only related to the json serialisation and HTTP request handling. This improvement mus tbe confirmed with the getBalance request when it will be available.
+Actix show an important improvement of the performance. It seems to come from a better CPU usage of Actix. As there's no other processing on the validator, all CPU are available.
 
-## Actions
+Forcing Actix with one CPU, is perform a little worse than jsonrpsee.
 
- - correct getBalance on jsonrpc_actix
- - Do the getBalance test for jsonrpc_actix branch
- - See the reason of the performance difference between jsonrpc_actix branch and the others.
+So it show that the execution model is important for the overall performance and with a 1 CPU execution, jsonrpsee perform a little better.
 
-
- GetBLockHash GetSlot.
-
- curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '
-  {"jsonrpc":"2.0","id":1, "method":"getSlot"}
-'
